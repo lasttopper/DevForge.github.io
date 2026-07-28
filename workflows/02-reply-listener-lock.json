@@ -1,0 +1,1379 @@
+{
+  "name": "02 · Unified Reply Listener & Lead Lock",
+  "nodes": [
+    {
+      "parameters": {
+        "postProcessAction": "read",
+        "format": "simple",
+        "options": {
+          "allowUnauthorizedCerts": false,
+          "forceReconnect": 60
+        }
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        -120
+      ],
+      "id": "4b84c571-97bf-4b12-8db1-59de84fe81e6",
+      "name": "📥 IMAP · Email Replies"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-reply",
+        "responseMode": "onReceived",
+        "responseCode": 200,
+        "options": {
+          "rawBody": false
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        120
+      ],
+      "id": "f1270118-a4e4-4603-afe9-57e77bca2e49",
+      "name": "🌐 Webhook · WhatsApp Replies",
+      "webhookId": "a7f3c1e2-9b44-4c0d-8e51-6d2a0f7b3c88"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// IMAP (simple format) -> canonical reply shape.\nconst j = $json || {};\n\nconst from = (j.from || j.fromEmail || '').toString();\nconst match = from.match(/<([^>]+)>/);\nconst address = (match ? match[1] : from).trim().toLowerCase();\n\nconst body = (j.text || j.textPlain || j.textHtml || '')\n  .toString()\n  // strip quoted history so the AI only reads what they actually wrote\n  .split(/^\\s*(?:>|On .+ wrote:|-----Original Message-----|Sent from my)/m)[0]\n  .trim()\n  .slice(0, 4000);\n\nreturn [{\n  json: {\n    channel: 'email',\n    identifier: address,\n    sender_name: (match ? from.replace(/<[^>]+>/, '') : '').replace(/\"/g, '').trim(),\n    subject: (j.subject || '').toString(),\n    body,\n    external_id: (j.messageId || `imap:${address}:${Date.now()}`).toString(),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        -120
+      ],
+      "id": "0eae530b-cee6-4ae0-9e35-ded551584180",
+      "name": "📧 Normalise Email Reply"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Evolution API messages.upsert payload -> canonical reply shape.\nconst root = $json.body ?? $json;\nconst data = root.data ?? root;\nconst key  = data.key ?? {};\nconst msg  = data.message ?? {};\n\n// Ignore our own outgoing messages and group chats.\nconst jid = (key.remoteJid || '').toString();\nif (key.fromMe === true) return [];\nif (jid.endsWith('@g.us') || jid.includes('@broadcast')) return [];\n\n// WhatsApp has a dozen message shapes; pull text out of the common ones.\nconst body = (\n  msg.conversation ||\n  msg.extendedTextMessage?.text ||\n  msg.imageMessage?.caption ||\n  msg.videoMessage?.caption ||\n  msg.buttonsResponseMessage?.selectedDisplayText ||\n  msg.listResponseMessage?.title ||\n  msg.templateButtonReplyMessage?.selectedDisplayText ||\n  ''\n).toString().trim().slice(0, 4000);\n\nif (!body) return [];   // sticker / audio / reaction — nothing to triage\n\nconst phone = jid.split('@')[0].split(':')[0].replace(/\\D/g, '');\n\nreturn [{\n  json: {\n    channel: 'whatsapp',\n    identifier: phone,\n    sender_name: (data.pushName || '').toString(),\n    subject: '',\n    body,\n    external_id: (key.id ? `wa:${key.id}` : `wa:${phone}:${Date.now()}`),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -260,
+        120
+      ],
+      "id": "b8ce7886-3dd1-46eb-b740-d0052793ee72",
+      "name": "💬 Normalise WhatsApp Reply"
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -20,
+        0
+      ],
+      "id": "e13cb40b-4b07-477f-8a0f-d7952e59f56e",
+      "name": "🔗 Merge Channels"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86bddf91-73d5-4d81-bd9a-be3e502e4340",
+              "name": "supabase_url",
+              "value": "={{ $env.SUPABASE_URL || 'https://YOUR-PROJECT.supabase.co' }}",
+              "type": "string"
+            },
+            {
+              "id": "5d761811-ff63-47fe-b6f5-76998a881ef6",
+              "name": "evolution_url",
+              "value": "={{ ($env.EVOLUTION_API_URL || 'https://your-evolution.up.railway.app').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "25fbebf6-a3d9-46d2-b245-58f589e75aaf",
+              "name": "evolution_instance",
+              "value": "={{ $env.EVOLUTION_INSTANCE || 'sales-bot' }}",
+              "type": "string"
+            },
+            {
+              "id": "aad1ec2d-b0b2-4de5-8482-b069a7968707",
+              "name": "n8n_webhook_base",
+              "value": "={{ ($env.N8N_WEBHOOK_BASE || $env.WEBHOOK_URL || 'https://your-n8n.example.com').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "57930a7d-0d23-42eb-9483-4a963e0d469b",
+              "name": "public_site_url",
+              "value": "={{ $env.PUBLIC_SITE_URL || 'https://your-agency.example.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "f8185a6f-f711-45dc-90e1-79dc56eab743",
+              "name": "sender_email",
+              "value": "={{ $env.SENDER_EMAIL || 'you@yourdomain.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "943cfc70-22ec-44b2-a7d2-16fa0cf7c442",
+              "name": "sender_name",
+              "value": "={{ $env.SENDER_NAME || 'Alex' }}",
+              "type": "string"
+            },
+            {
+              "id": "da7c85b9-f217-4549-bd60-93ec14920248",
+              "name": "agency_name",
+              "value": "={{ $env.AGENCY_NAME || 'Studio Nova' }}",
+              "type": "string"
+            },
+            {
+              "id": "98f86978-a20b-4f85-911c-0e2a177c3473",
+              "name": "default_country_code",
+              "value": "={{ $env.DEFAULT_COUNTRY_CODE || '91' }}",
+              "type": "string"
+            },
+            {
+              "id": "090bd432-ae4b-478d-b51a-4f2513544e26",
+              "name": "model_copywriter",
+              "value": "={{ $env.OPENROUTER_MODEL_COPY || 'nousresearch/hermes-3-llama-3.1-405b:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "84daa870-631d-4fc1-a642-cdefb0ae14c5",
+              "name": "model_triage",
+              "value": "={{ $env.OPENROUTER_MODEL_TRIAGE || 'meta-llama/llama-3.3-70b-instruct:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "1b5b938c-cd28-41ef-af4a-8a04eea7c071",
+              "name": "model_coder",
+              "value": "={{ $env.OPENROUTER_MODEL_CODER || 'deepseek/deepseek-chat-v3-0324:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "e1587d24-ed0e-4bbf-8fb4-10a97370c839",
+              "name": "price_paise",
+              "value": "={{ Number($env.OFFER_PRICE_PAISE || 150000) }}",
+              "type": "number"
+            },
+            {
+              "id": "6c50eefb-38c7-4631-8ce5-84b97cc5cf9b",
+              "name": "currency",
+              "value": "={{ $env.OFFER_CURRENCY || 'INR' }}",
+              "type": "string"
+            },
+            {
+              "id": "d7844ee4-b24d-4c39-a859-0ed712650d44",
+              "name": "max_new_leads_per_run",
+              "value": "={{ Number($env.MAX_NEW_LEADS_PER_RUN || 10) }}",
+              "type": "number"
+            },
+            {
+              "id": "7fadcefc-48c8-4b80-8c27-8de24118e833",
+              "name": "whatsapp_daily_cap",
+              "value": "={{ Number($env.WHATSAPP_DAILY_CAP || 40) }}",
+              "type": "number"
+            },
+            {
+              "id": "32c43d99-1952-49b2-83f4-f430ad25a5a1",
+              "name": "dry_run",
+              "value": "={{ ($env.DRY_RUN || 'false') === 'true' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "b3ca3e5a-8cce-44b5-9848-00f690c6fdeb",
+              "name": "alert_channel_url",
+              "value": "={{ $env.ALERT_WEBHOOK_URL || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        200,
+        0
+      ],
+      "id": "6be9282d-facc-4a84-9f87-bdd969eea8e4",
+      "name": "⚙️ Config"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a4c9accd-8456-42d3-8c4b-0871e8716a7f",
+              "name": "channel",
+              "value": "={{ $('🔗 Merge Channels').item.json.channel }}",
+              "type": "string"
+            },
+            {
+              "id": "70855fd6-7644-4a4a-9e13-6e690a3d994d",
+              "name": "identifier",
+              "value": "={{ $('🔗 Merge Channels').item.json.identifier }}",
+              "type": "string"
+            },
+            {
+              "id": "4310f296-c039-455b-a9d2-2f76358ef419",
+              "name": "sender_name",
+              "value": "={{ $('🔗 Merge Channels').item.json.sender_name }}",
+              "type": "string"
+            },
+            {
+              "id": "9c481a6b-9156-4556-bc36-133c379ab9a5",
+              "name": "subject",
+              "value": "={{ $('🔗 Merge Channels').item.json.subject }}",
+              "type": "string"
+            },
+            {
+              "id": "352b19e4-ba82-4c05-8c71-02ef4d797f31",
+              "name": "body",
+              "value": "={{ $('🔗 Merge Channels').item.json.body }}",
+              "type": "string"
+            },
+            {
+              "id": "68a2aa7c-88b5-43bf-b04d-8d09e5c03436",
+              "name": "external_id",
+              "value": "={{ $('🔗 Merge Channels').item.json.external_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        420,
+        0
+      ],
+      "id": "42246610-74e7-4b54-a894-e3bfd70724bf",
+      "name": "🧷 Carry Reply"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_find_contact",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_identifier\": {{ JSON.stringify($json.identifier) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "7f6f7ea8-7b38-4423-bc14-94c49350d23a",
+      "name": "🔍 Find Contact",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const reply = $('🧷 Carry Reply').item.json;\nconst rows  = Array.isArray($json) ? $json : ($json ? [$json] : []);\nconst row   = rows.find((r) => r && r.contact_id) || null;\n\nreturn [{\n  json: {\n    ...reply,\n    known: Boolean(row),\n    ...(row || {}),\n    // leads we should stop talking to automatically\n    terminal: ['paid', 'delivered', 'lost'].includes(row?.lead_status),\n    awaiting_approval: row?.lead_status === 'prototype_sent',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        0
+      ],
+      "id": "efcfa4f5-024e-435b-b013-0bdeff6fe817",
+      "name": "🧩 Attach Lead Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c227030f-30ac-4297-bac2-2b62048509a9",
+              "leftValue": "={{ $json.known }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "867b27fd-e790-46b7-ac67-c4082ac03560",
+              "leftValue": "={{ $json.terminal }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1140,
+        0
+      ],
+      "id": "d4b6bf66-afdf-4b67-872b-33545b387df8",
+      "name": "❓ Known Contact & Active?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        180
+      ],
+      "id": "4da5f83d-c694-4c4a-bb25-cdbc2716d5d3",
+      "name": "🙈 Ignore (unknown / closed)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_log_message",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":     {{ JSON.stringify($json.lead_id) }},\n  \"p_contact_id\":  {{ JSON.stringify($json.contact_id) }},\n  \"p_direction\":   \"inbound\",\n  \"p_channel\":     {{ JSON.stringify($json.channel) }},\n  \"p_body\":        {{ JSON.stringify($json.body) }},\n  \"p_subject\":     {{ JSON.stringify($json.subject) }},\n  \"p_external_id\": {{ JSON.stringify($json.external_id) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1380,
+        -60
+      ],
+      "id": "f6ad86cb-0e57-4bdb-aec9-d6d4037d9f92",
+      "name": "📝 Log Inbound Message",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dcdbee8d-1a12-42b0-92e1-ec5b7a36bf73",
+              "name": "system_prompt",
+              "value": "=You are a precise sales-reply classifier. You reply with exactly one word from the allowed list and nothing else. No punctuation, no explanation.",
+              "type": "string"
+            },
+            {
+              "id": "cb83d500-f5d5-46d7-ba6a-d6bfd93e5ebb",
+              "name": "prompt",
+              "value": "=A local business owner replied to my cold outreach.\n\nContext:\n- Business: {{ $('🧩 Attach Lead Context').item.json.business_name }}\n- Where we are in the conversation: {{ $('🧩 Attach Lead Context').item.json.lead_status }}\n- I already sent them a free mockup: {{ $('🧩 Attach Lead Context').item.json.awaiting_approval ? 'YES — ' + $('🧩 Attach Lead Context').item.json.prototype_url : 'no' }}\n\nTheir reply:\n\"\"\"\n{{ $('🧩 Attach Lead Context').item.json.body }}\n\"\"\"\n\nClassify into exactly one of:\nINTERESTED   - wants the free mockup / says yes / asks me to send it\nAPPROVED     - they have SEEN the mockup and like it, or ask about price/how to pay/next steps\nQUESTION     - genuine question or hesitation, not yet a yes\nNOT_INTERESTED - no, stop, remove me, unsubscribe, angry, or already has a site\nAUTO_REPLY   - out-of-office, delivery failure, or an automated system message\n\nAnswer with one word only.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1620,
+        -60
+      ],
+      "id": "093f3c08-f752-4ce7-a020-9858d4e40f14",
+      "name": "🧠 Build Triage Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 180000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "={{ $('⚙️ Config').first().json.public_site_url }}"
+            },
+            {
+              "name": "X-Title",
+              "value": "Omnichannel AI Sales Machine"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": {{ JSON.stringify($('⚙️ Config').first().json.model_triage) }},\n  \"temperature\": 0,\n  \"max_tokens\": 8,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt || 'You are a helpful assistant.') }} },\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.prompt) }} }\n  ]\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1860,
+        -60
+      ],
+      "id": "b8c8403f-abc9-45da-82af-ec109f89c936",
+      "name": "🧠 Hermes · Triage Intent",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🧩 Attach Lead Context').item.json;\nconst raw = ($json?.choices?.[0]?.message?.content || '').toUpperCase();\n\nconst allowed = ['APPROVED', 'NOT_INTERESTED', 'INTERESTED', 'AUTO_REPLY', 'QUESTION'];\nlet intent = allowed.find((a) => raw.includes(a)) || null;\n\n// Deterministic guards that beat any LLM on these exact phrases.\nconst body = (ctx.body || '').toLowerCase();\nif (/\\b(unsubscribe|stop|do not contact|not interested|remove me|no thanks|already have a website)\\b/.test(body)) {\n  intent = 'NOT_INTERESTED';\n} else if (/\\b(out of office|auto[- ]?reply|automatic reply|delivery status notification|undeliverable|mailer-daemon)\\b/.test(body)) {\n  intent = 'AUTO_REPLY';\n}\nif (!intent) intent = 'QUESTION';   // safest default: a human answers\n\n// \"APPROVED\" only makes sense once they've actually seen a mockup.\nif (intent === 'APPROVED' && !ctx.awaiting_approval) intent = 'INTERESTED';\n\nreturn [{ json: { ...ctx, intent } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2100,
+        -60
+      ],
+      "id": "55159a58-b8e2-4b87-897b-67d0cc0b4019",
+      "name": "🏷 Parse Intent"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "843aa113-74cd-4f1f-9ec9-c75066b2b913",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "INTERESTED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "INTERESTED"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "31cae21c-ba5c-4d78-898e-63ac8e568564",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "APPROVED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "APPROVED"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "cd3518bc-674d-41f1-96a1-ac5f764a8eb0",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "QUESTION",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "QUESTION"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a86b16e2-36f3-4c9d-9f25-d51bdaf04d35",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "NOT_INTERESTED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "NOT_INTERESTED"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6e39726c-18fa-43e5-9f15-771da65a024a",
+                    "leftValue": "={{ $json.intent }}",
+                    "rightValue": "AUTO_REPLY",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "AUTO_REPLY"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2340,
+        -60
+      ],
+      "id": "e81c6ee1-f187-436f-bb71-61dc4d1f2883",
+      "name": "🔀 Route Intent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_lock_lead",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":    {{ JSON.stringify($json.lead_id) }},\n  \"p_contact_id\": {{ JSON.stringify($json.contact_id) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2620,
+        -420
+      ],
+      "id": "5fb164a1-1e87-406d-ab98-581c6af14bda",
+      "name": "🔒 Lock Lead To This Contact"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 15000
+        },
+        "url": "={{ $('⚙️ Config').first().json.n8n_webhook_base }}/webhook/build-prototype",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"lead_id\":    {{ JSON.stringify($('🏷 Parse Intent').item.json.lead_id) }},\n  \"contact_id\": {{ JSON.stringify($('🏷 Parse Intent').item.json.contact_id) }},\n  \"source\":     \"reply-listener\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        -420
+      ],
+      "id": "c01c4536-dfcc-4d46-97a3-f29869a00f21",
+      "name": "🚀 Trigger Phase 3 (Prototype)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 15000
+        },
+        "url": "={{ $('⚙️ Config').first().json.n8n_webhook_base }}/webhook/build-prototype",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"lead_id\":    {{ JSON.stringify($json.lead_id) }},\n  \"contact_id\": {{ JSON.stringify($json.contact_id) }},\n  \"stage\":      \"payment\",\n  \"source\":     \"reply-listener\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2620,
+        -230
+      ],
+      "id": "c03bfecf-a1e8-4976-a5e8-2777b28be8d6",
+      "name": "💳 Trigger Phase 3b (Payment Link)",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b711392a-579d-4bee-8b63-ed9141a6e47f",
+              "name": "system_prompt",
+              "value": "=You are {{ $('⚙️ Config').first().json.sender_name }} from {{ $('⚙️ Config').first().json.agency_name }}, a small web studio. You reply to prospects yourself — short, warm, concrete, no corporate voice, no bullet lists, no emoji. You never invent facts about price beyond what you're told. Reply with the message body only.",
+              "type": "string"
+            },
+            {
+              "id": "4b08b1b7-b97c-4953-840e-5a4d38476e8f",
+              "name": "prompt",
+              "value": "=Prospect: {{ $json.business_name }} ({{ $json.niche }} in {{ $json.location }})\nChannel: {{ $json.channel }}\nOffer on the table: a FREE one-page website mockup, no commitment. If they go ahead afterwards the full site is {{ $('⚙️ Config').first().json.currency }} {{ ($('⚙️ Config').first().json.price_paise / 100).toFixed(0) }} one-off.\nMockup already sent: {{ $json.awaiting_approval ? 'yes — ' + $json.prototype_url : 'not yet' }}\n\nThey asked:\n\"\"\"\n{{ $json.body }}\n\"\"\"\n\nWrite my reply.\n- {{ $json.channel === 'whatsapp' ? 'Max 45 words, casual, WhatsApp tone.' : 'Max 110 words, plain-text email, sign off as ' + $('⚙️ Config').first().json.sender_name + '.' }}\n- Answer the actual question first.\n- End by nudging the next step (send the free mockup / what they think of it).\n- No markdown, no subject line.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2620,
+        -40
+      ],
+      "id": "dca63b68-8b17-4c42-b6eb-4f259211342c",
+      "name": "✍️ Build Answer Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 180000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "={{ $('⚙️ Config').first().json.public_site_url }}"
+            },
+            {
+              "name": "X-Title",
+              "value": "Omnichannel AI Sales Machine"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": {{ JSON.stringify($('⚙️ Config').first().json.model_triage) }},\n  \"temperature\": 0.7,\n  \"max_tokens\": 400,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt || 'You are a helpful assistant.') }} },\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.prompt) }} }\n  ]\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        -40
+      ],
+      "id": "013d0b3b-c653-4e16-9eae-ad0316ad40ca",
+      "name": "🧠 Hermes · Draft Answer",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🏷 Parse Intent').item.json;\nconst cfg = $('⚙️ Config').first().json;\n\nlet text = ($json?.choices?.[0]?.message?.content || '').trim();\ntext = text.replace(/^\\`\\`\\`[a-z]*\\n?/i, '').replace(/\\`\\`\\`$/, '').trim();\ntext = text.replace(/^(subject|re):.*$/gim, '').trim();\n\nif (!text) {\n  text = `Hi${ctx.contact_name && ctx.contact_name !== 'Owner' ? ' ' + ctx.contact_name : ''}, good question — happy to explain. The mockup is completely free and takes me a day; you only pay if you want the finished site. Want me to put it together for ${ctx.business_name}?`;\n}\n\nreturn [{ json: { ...ctx, reply_text: text, reply_subject: ctx.subject ? (/^re:/i.test(ctx.subject) ? ctx.subject : 'Re: ' + ctx.subject) : `Re: ${ctx.business_name}` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        -40
+      ],
+      "id": "51766fcb-357b-4dc6-9a40-73ba2c17cc29",
+      "name": "🧼 Clean Answer"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "e04b661a-d6f4-4e39-8f40-a0b86348521f",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4810294c-6d52-4fa1-bfd1-7cc1b0d98b0f",
+                    "leftValue": "={{ $json.channel }}",
+                    "rightValue": "whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3340,
+        -40
+      ],
+      "id": "7c5a9989-e52a-4383-9ecd-8ee963d252ca",
+      "name": "🔀 Reply Channel"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "fromEmail": "={{ $('⚙️ Config').first().json.sender_email }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.reply_subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.reply_text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3580,
+        -120
+      ],
+      "id": "ce73ae12-286b-46d5-a37f-e899d369e039",
+      "name": "📧 Send Email Answer",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 60000
+        },
+        "url": "={{ $('⚙️ Config').first().json.evolution_url }}/message/sendText/{{ $('⚙️ Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": {{ JSON.stringify($json.phone) }},\n  \"delay\": 1200,\n  \"linkPreview\": true,\n  \"text\": {{ JSON.stringify($json.reply_text) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3580,
+        40
+      ],
+      "id": "c9dd75d9-9ea1-46ab-8fe5-a7127cd9ef7b",
+      "name": "💬 Send WhatsApp Answer",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_log_message",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":    {{ JSON.stringify($('🧼 Clean Answer').item.json.lead_id) }},\n  \"p_contact_id\": {{ JSON.stringify($('🧼 Clean Answer').item.json.contact_id) }},\n  \"p_direction\":  \"outbound\",\n  \"p_channel\":    {{ JSON.stringify($('🧼 Clean Answer').item.json.channel) }},\n  \"p_body\":       {{ JSON.stringify($('🧼 Clean Answer').item.json.reply_text) }},\n  \"p_intent\":     \"ANSWER\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3820,
+        -40
+      ],
+      "id": "110e74e6-f909-4bde-b9b9-a59dc3f33a67",
+      "name": "📝 Log Answer",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_mark_lost",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":    {{ JSON.stringify($json.lead_id) }},\n  \"p_contact_id\": {{ JSON.stringify($json.contact_id) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2620,
+        200
+      ],
+      "id": "ab2c9ee3-da1a-46e8-bbf5-6b8808ea357e",
+      "name": "🚫 Mark Lost",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2620,
+        340
+      ],
+      "id": "5a7a1d2b-193c-4a42-a9ed-6b25ac94860a",
+      "name": "🤖 Ignore Auto-Reply"
+    },
+    {
+      "parameters": {
+        "content": "## PHASE 2 · Listen, triage, lock\nTwo doors in, one brain.\n\n**Evolution webhook setup**\n```\nPOST {{EVOLUTION_URL}}/webhook/set/{{instance}}\n{ \"webhook\": { \"enabled\": true,\n    \"url\": \"https://YOUR-N8N/webhook/whatsapp-reply\",\n    \"events\": [\"MESSAGES_UPSERT\"] } }\n```\n**IMAP:** imap.gmail.com : 993, SSL, Gmail *app password*.",
+        "width": 600,
+        "height": 320,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -420
+      ],
+      "id": "e62f4d5a-46b3-4ff8-8f04-fb1d6150c2c7",
+      "name": "Note 1"
+    },
+    {
+      "parameters": {
+        "content": "### The lock\n`sales_lock_lead` sets the replier as `primary_contact_id`, flips the lead\nto **engaged**, and marks every other contact at that business **locked** —\nin one transaction, so you never end up negotiating with two people.",
+        "width": 420,
+        "height": 200,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2520,
+        -640
+      ],
+      "id": "90df90d8-b923-4a0e-9e82-21344ea6a472",
+      "name": "Note 2"
+    },
+    {
+      "parameters": {
+        "content": "### Never auto-reply into a loop\n`AUTO_REPLY` (out-of-office, bounces) and unknown senders are dropped\nsilently. Regex guards override the LLM for \"unsubscribe\"/\"stop\".",
+        "width": 420,
+        "height": 180,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2520,
+        460
+      ],
+      "id": "30d31d1f-e5b3-40d0-9a2b-40e7b2c5d383",
+      "name": "Note 3"
+    }
+  ],
+  "connections": {
+    "📥 IMAP · Email Replies": {
+      "main": [
+        [
+          {
+            "node": "📧 Normalise Email Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 Webhook · WhatsApp Replies": {
+      "main": [
+        [
+          {
+            "node": "💬 Normalise WhatsApp Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Normalise Email Reply": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Normalise WhatsApp Reply": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Channels",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Channels": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Config": {
+      "main": [
+        [
+          {
+            "node": "🧷 Carry Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧷 Carry Reply": {
+      "main": [
+        [
+          {
+            "node": "🔍 Find Contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Find Contact": {
+      "main": [
+        [
+          {
+            "node": "🧩 Attach Lead Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧩 Attach Lead Context": {
+      "main": [
+        [
+          {
+            "node": "❓ Known Contact & Active?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ Known Contact & Active?": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Inbound Message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🙈 Ignore (unknown / closed)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Log Inbound Message": {
+      "main": [
+        [
+          {
+            "node": "🧠 Build Triage Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 Build Triage Prompt": {
+      "main": [
+        [
+          {
+            "node": "🧠 Hermes · Triage Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 Hermes · Triage Intent": {
+      "main": [
+        [
+          {
+            "node": "🏷 Parse Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🏷 Parse Intent": {
+      "main": [
+        [
+          {
+            "node": "🔀 Route Intent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Route Intent": {
+      "main": [
+        [
+          {
+            "node": "🔒 Lock Lead To This Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "💳 Trigger Phase 3b (Payment Link)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "✍️ Build Answer Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🚫 Mark Lost",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🤖 Ignore Auto-Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔒 Lock Lead To This Contact": {
+      "main": [
+        [
+          {
+            "node": "🚀 Trigger Phase 3 (Prototype)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✍️ Build Answer Prompt": {
+      "main": [
+        [
+          {
+            "node": "🧠 Hermes · Draft Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 Hermes · Draft Answer": {
+      "main": [
+        [
+          {
+            "node": "🧼 Clean Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧼 Clean Answer": {
+      "main": [
+        [
+          {
+            "node": "🔀 Reply Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Reply Channel": {
+      "main": [
+        [
+          {
+            "node": "📧 Send Email Answer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "💬 Send WhatsApp Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Send Email Answer": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Send WhatsApp Answer": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Answer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    "ai-sales-machine"
+  ],
+  "versionId": "ec26d66d-1092-45f3-b09a-c3b64ebca461"
+}

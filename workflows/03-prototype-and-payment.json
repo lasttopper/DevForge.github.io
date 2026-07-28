@@ -1,0 +1,1287 @@
+{
+  "name": "03 · Prototype Build & Razorpay Payment Link",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "build-prototype",
+        "responseMode": "onReceived",
+        "responseCode": 202,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        -80
+      ],
+      "id": "7bbf3665-6a32-4e15-b86b-69f327fe3b45",
+      "name": "🌐 Webhook · build-prototype",
+      "webhookId": "c4d9b7a1-2e56-4f83-9a10-77be5c3d4f22"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -560,
+        180
+      ],
+      "id": "4dd0a196-12b2-451c-8b91-1c50e245d726",
+      "name": "⏱ Safety Net (30 min)"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86bddf91-73d5-4d81-bd9a-be3e502e4340",
+              "name": "supabase_url",
+              "value": "={{ $env.SUPABASE_URL || 'https://YOUR-PROJECT.supabase.co' }}",
+              "type": "string"
+            },
+            {
+              "id": "5d761811-ff63-47fe-b6f5-76998a881ef6",
+              "name": "evolution_url",
+              "value": "={{ ($env.EVOLUTION_API_URL || 'https://your-evolution.up.railway.app').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "25fbebf6-a3d9-46d2-b245-58f589e75aaf",
+              "name": "evolution_instance",
+              "value": "={{ $env.EVOLUTION_INSTANCE || 'sales-bot' }}",
+              "type": "string"
+            },
+            {
+              "id": "aad1ec2d-b0b2-4de5-8482-b069a7968707",
+              "name": "n8n_webhook_base",
+              "value": "={{ ($env.N8N_WEBHOOK_BASE || $env.WEBHOOK_URL || 'https://your-n8n.example.com').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "57930a7d-0d23-42eb-9483-4a963e0d469b",
+              "name": "public_site_url",
+              "value": "={{ $env.PUBLIC_SITE_URL || 'https://your-agency.example.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "f8185a6f-f711-45dc-90e1-79dc56eab743",
+              "name": "sender_email",
+              "value": "={{ $env.SENDER_EMAIL || 'you@yourdomain.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "943cfc70-22ec-44b2-a7d2-16fa0cf7c442",
+              "name": "sender_name",
+              "value": "={{ $env.SENDER_NAME || 'Alex' }}",
+              "type": "string"
+            },
+            {
+              "id": "da7c85b9-f217-4549-bd60-93ec14920248",
+              "name": "agency_name",
+              "value": "={{ $env.AGENCY_NAME || 'Studio Nova' }}",
+              "type": "string"
+            },
+            {
+              "id": "98f86978-a20b-4f85-911c-0e2a177c3473",
+              "name": "default_country_code",
+              "value": "={{ $env.DEFAULT_COUNTRY_CODE || '91' }}",
+              "type": "string"
+            },
+            {
+              "id": "090bd432-ae4b-478d-b51a-4f2513544e26",
+              "name": "model_copywriter",
+              "value": "={{ $env.OPENROUTER_MODEL_COPY || 'nousresearch/hermes-3-llama-3.1-405b:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "84daa870-631d-4fc1-a642-cdefb0ae14c5",
+              "name": "model_triage",
+              "value": "={{ $env.OPENROUTER_MODEL_TRIAGE || 'meta-llama/llama-3.3-70b-instruct:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "1b5b938c-cd28-41ef-af4a-8a04eea7c071",
+              "name": "model_coder",
+              "value": "={{ $env.OPENROUTER_MODEL_CODER || 'deepseek/deepseek-chat-v3-0324:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "e1587d24-ed0e-4bbf-8fb4-10a97370c839",
+              "name": "price_paise",
+              "value": "={{ Number($env.OFFER_PRICE_PAISE || 150000) }}",
+              "type": "number"
+            },
+            {
+              "id": "6c50eefb-38c7-4631-8ce5-84b97cc5cf9b",
+              "name": "currency",
+              "value": "={{ $env.OFFER_CURRENCY || 'INR' }}",
+              "type": "string"
+            },
+            {
+              "id": "d7844ee4-b24d-4c39-a859-0ed712650d44",
+              "name": "max_new_leads_per_run",
+              "value": "={{ Number($env.MAX_NEW_LEADS_PER_RUN || 10) }}",
+              "type": "number"
+            },
+            {
+              "id": "7fadcefc-48c8-4b80-8c27-8de24118e833",
+              "name": "whatsapp_daily_cap",
+              "value": "={{ Number($env.WHATSAPP_DAILY_CAP || 40) }}",
+              "type": "number"
+            },
+            {
+              "id": "32c43d99-1952-49b2-83f4-f430ad25a5a1",
+              "name": "dry_run",
+              "value": "={{ ($env.DRY_RUN || 'false') === 'true' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "b3ca3e5a-8cce-44b5-9848-00f690c6fdeb",
+              "name": "alert_channel_url",
+              "value": "={{ $env.ALERT_WEBHOOK_URL || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -320,
+        40
+      ],
+      "id": "ab85f009-49ed-4691-871f-7d7fbc615528",
+      "name": "⚙️ Config"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Which door did we come through?\nconst isWebhook = $('🌐 Webhook · build-prototype').isExecuted;\n\nif (isWebhook) {\n  const body = $('🌐 Webhook · build-prototype').first().json.body ?? {};\n  if (!body.lead_id) return [];\n  return [{\n    json: {\n      mode: 'direct',\n      lead_id: body.lead_id,\n      contact_id: body.contact_id || null,\n      stage: body.stage === 'payment' ? 'payment' : 'prototype',\n    },\n  }];\n}\n\n// Scheduled safety net: pick up anything Workflow 2 failed to hand over.\nreturn [{ json: { mode: 'claim', stage: 'prototype' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        40
+      ],
+      "id": "43ae2ea8-d5c5-4630-b734-1d0dec16e876",
+      "name": "🧭 Resolve Trigger"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ca9dae11-747b-476b-aaf0-1b9dab709a07",
+              "leftValue": "={{ $json.mode }}",
+              "rightValue": "direct",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        40
+      ],
+      "id": "221494ec-70b0-4ad0-b094-c44496612897",
+      "name": "❓ Direct Or Claim?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_get_lead",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\": {{ JSON.stringify($json.lead_id) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -80
+      ],
+      "id": "9ea70ed2-94d5-4bfe-b6a7-34fb830fef94",
+      "name": "📇 Load Lead"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_claim_leads",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_from_status\": \"engaged\",\n  \"p_to_status\":   \"engaged\",\n  \"p_limit\":       3\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        180
+      ],
+      "id": "d81eb39d-cdee-4c5f-a6ef-19795d28fe2b",
+      "name": "🎣 Claim Engaged Leads",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        660,
+        40
+      ],
+      "id": "d29b4696-de06-4583-9e5b-4b22481c676d",
+      "name": "🔗 Merge Sources"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Both RPCs return table rows; flatten to one item per lead.\nconst trigger = $('🧭 Resolve Trigger').first().json;\nconst out = [];\n\nfor (const item of $input.all()) {\n  const rows = Array.isArray(item.json) ? item.json : [item.json];\n  for (const r of rows) {\n    if (!r || !r.lead_id) continue;\n    out.push({\n      json: {\n        lead_id: r.lead_id,\n        contact_id: r.contact_id || trigger.contact_id || null,\n        business_name: r.business_name || '',\n        niche: r.niche || 'local business',\n        location: r.location || '',\n        lead_status: r.lead_status || '',\n        prototype_url: r.prototype_url || '',\n        contact_name: r.contact_name || 'there',\n        email: r.email || '',\n        phone: r.phone || '',\n        channel: r.email && !r.phone ? 'email' : (r.phone ? 'whatsapp' : 'none'),\n        metadata: r.metadata || {},\n        // a claimed lead is always a prototype job; a webhook can ask for payment\n        stage: trigger.stage === 'payment' ? 'payment' : 'prototype',\n      },\n    });\n  }\n}\n\n// De-dupe if both the webhook and the safety net grabbed the same lead.\nconst seen = new Set();\nreturn out.filter((o) => !seen.has(o.json.lead_id) && seen.add(o.json.lead_id));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        40
+      ],
+      "id": "e6daf4a9-205f-4b55-9055-3bf2d2be860d",
+      "name": "🧾 Normalise Lead"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "621e10db-0430-4057-bcb3-7cd6cfce59f4",
+                    "leftValue": "={{ $json.stage }}",
+                    "rightValue": "prototype",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  },
+                  {
+                    "id": "002b4fe7-b0a5-4992-9e7e-6e18f979c268",
+                    "leftValue": "={{ $json.prototype_url }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "prototype"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "55bef7d0-c99a-496b-b26a-8554b8704418",
+                    "leftValue": "={{ $json.stage }}",
+                    "rightValue": "payment",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "payment"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true,
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1140,
+        40
+      ],
+      "id": "5aefa86b-5816-4c80-9663-fda6bb7ea85f",
+      "name": "🔀 Prototype Or Payment?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1400,
+        320
+      ],
+      "id": "26e7c444-438a-4c09-ba68-4bdc4af04971",
+      "name": "⏭ Already Has Prototype"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "19c463bd-6a65-40e4-a324-8d02267946ab",
+              "name": "system_prompt",
+              "value": "=You are a senior front-end developer. You output a single complete HTML document and absolutely nothing else — no markdown fences, no commentary before or after.",
+              "type": "string"
+            },
+            {
+              "id": "28e428e0-4d41-4231-912e-e25e523f4f43",
+              "name": "prompt",
+              "value": "=Build a one-page marketing website for this real local business.\n\nBusiness: {{ $json.business_name }}\nIndustry: {{ $json.niche }}\nCity: {{ $json.location }}\nPhone: {{ $json.phone }}\nAddress: {{ $json.metadata?.address || $json.location }}\nGoogle rating: {{ $json.metadata?.rating || 'n/a' }} from {{ $json.metadata?.reviews || 0 }} reviews\n\nRequirements:\n- Single self-contained index.html. Tailwind via <script src=\"https://cdn.tailwindcss.com\"></script>.\n- Sections: sticky nav, hero with a strong headline + \"Call now\" button (tel: link to the phone above), 3-4 services cards relevant to a {{ $json.niche }}, why-choose-us with the Google rating if present, testimonials (mark them clearly as sample text), contact section with phone/address and a simple form (no backend, just markup), footer.\n- Real, specific copy for a {{ $json.niche }} in {{ $json.location }}. No lorem ipsum. No placeholder like [Business Name].\n- Modern look: one accent colour that suits the industry, generous whitespace, rounded cards, subtle shadows, mobile-first responsive.\n- Use inline SVG icons or emoji — never link to image files that don't exist.\n- Include <title> and a meta description with the business name and city.\n- No external JS besides the Tailwind CDN.\n\nOutput the raw HTML document starting with <!DOCTYPE html>.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1400,
+        -220
+      ],
+      "id": "ce0502e1-b627-4cb3-b352-67d111536856",
+      "name": "🎨 Build Site Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 180000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "={{ $('⚙️ Config').first().json.public_site_url }}"
+            },
+            {
+              "name": "X-Title",
+              "value": "Omnichannel AI Sales Machine"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": {{ JSON.stringify($('⚙️ Config').first().json.model_coder) }},\n  \"temperature\": 0.6,\n  \"max_tokens\": 8000,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt || 'You are a helpful assistant.') }} },\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.prompt) }} }\n  ]\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        -220
+      ],
+      "id": "f6059b81-5316-4fac-baa6-4d1d3d189ea7",
+      "name": "🧠 Hermes · Generate HTML",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const lead = $('🎨 Build Site Prompt').item.json;\nconst ctx  = $('🧾 Normalise Lead').item.json;\n\nlet html = ($json?.choices?.[0]?.message?.content || '').trim();\n\n// strip markdown fences if the model added them anyway\nhtml = html.replace(/^\\`\\`\\`(?:html)?\\s*/i, '').replace(/\\`\\`\\`\\s*$/, '').trim();\n\n// keep only the document itself\nconst start = html.search(/<!DOCTYPE|<html/i);\nif (start > 0) html = html.slice(start);\nconst end = html.toLowerCase().lastIndexOf('</html>');\nif (end !== -1) html = html.slice(0, end + 7);\n\nconst looksValid =\n  html.length > 800 &&\n  /<html[\\s>]/i.test(html) &&\n  /<\\/html>/i.test(html) &&\n  !/\\[business name\\]|lorem ipsum/i.test(html);\n\nif (!looksValid) {\n  throw new Error(\n    `Generated HTML failed validation for \"${ctx.business_name}\" (length ${html.length}). ` +\n    'Try a stronger model in OPENROUTER_MODEL_CODER.'\n  );\n}\n\n// Vercel wants a plain UTF-8 string; slug keeps the project name legal.\nconst slug = (ctx.business_name || 'lead')\n  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'lead';\n\nreturn [{\n  json: {\n    ...ctx,\n    html,\n    html_bytes: Buffer.byteLength(html, 'utf8'),\n    project_name: `proto-${slug}-${String(ctx.lead_id).slice(0, 8)}`,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        -220
+      ],
+      "id": "ddd94881-1fca-4992-a2a7-58244ef2e462",
+      "name": "🧽 Extract & Validate HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 120000
+        },
+        "url": "https://api.vercel.com/v13/deployments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "forceNew",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": {{ JSON.stringify($json.project_name) }},\n  \"target\": \"production\",\n  \"public\": true,\n  \"files\": [\n    {\n      \"file\": \"index.html\",\n      \"data\": {{ JSON.stringify($json.html) }},\n      \"encoding\": \"utf-8\"\n    }\n  ],\n  \"projectSettings\": {\n    \"framework\": null,\n    \"buildCommand\": null,\n    \"outputDirectory\": null,\n    \"installCommand\": null\n  }\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2120,
+        -220
+      ],
+      "id": "fe73bd3f-f89b-4977-9b5e-afe25bb18e0c",
+      "name": "▲ Deploy To Vercel",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🧽 Extract & Validate HTML').item.json;\nconst d = $json || {};\n\n// v13 returns { url: \"proto-x-123.vercel.app\" } (no scheme) plus alias[]\nconst host = d.alias?.[0] || d.url || d.deployment?.url;\nif (!host) throw new Error('Vercel did not return a deployment URL: ' + JSON.stringify(d).slice(0, 400));\n\nconst url = host.startsWith('http') ? host : `https://${host}`;\n\nreturn [{ json: { ...ctx, prototype_url: url, deployment_id: d.id || null } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        -220
+      ],
+      "id": "7e040c3a-be03-4a7f-b897-fb1efb896316",
+      "name": "🔗 Prototype URL"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_set_prototype",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\": {{ JSON.stringify($json.lead_id) }},\n  \"p_url\":     {{ JSON.stringify($json.prototype_url) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2600,
+        -220
+      ],
+      "id": "b05b0b16-fbe0-443c-97f7-54c4772ac7bf",
+      "name": "💾 Save Prototype URL"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🔗 Prototype URL').item.json;\nconst cfg = $('⚙️ Config').first().json;\nconst name = ctx.contact_name && ctx.contact_name !== 'Owner' ? ctx.contact_name : 'there';\n\nconst email_body =\n`Hi ${name},\n\nHere's the free mockup I put together for ${ctx.business_name}:\n\n${ctx.prototype_url}\n\nIt's a live page — open it on your phone too. Everything on it (colours, photos, wording, your services) can be changed.\n\nIf you like the direction, I can have the finished site live on your own domain within 48 hours. If not, no hard feelings — the mockup is yours to keep either way.\n\nWhat do you think?\n\n${cfg.sender_name}`;\n\nconst whatsapp_body =\n`Hi ${name}, the free mockup for ${ctx.business_name} is ready 👇\n\n${ctx.prototype_url}\n\nHave a look (works on mobile too) — everything can be changed. What do you think?`;\n\nreturn [{\n  json: {\n    ...ctx,\n    subject: `Your free mockup — ${ctx.business_name}`,\n    email_body,\n    whatsapp_body,\n    stage_label: 'PROTOTYPE',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2840,
+        -220
+      ],
+      "id": "c8c86cd0-0198-4aaa-9722-1f65668577e1",
+      "name": "💌 Compose Prototype Message"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $json;\nconst cfg = $('⚙️ Config').first().json;\n\nconst amount = Number(cfg.price_paise || 150000);\nif (!Number.isFinite(amount) || amount < 100) {\n  throw new Error('OFFER_PRICE_PAISE must be an integer >= 100 (amount is in paise)');\n}\n\n// Razorpay rejects malformed contacts — only send what we actually have.\nconst customer = { name: (ctx.contact_name || 'Customer').slice(0, 50) };\nif (ctx.email) customer.email = ctx.email;\nif (ctx.phone) customer.contact = '+' + String(ctx.phone).replace(/\\D/g, '');\n\nreturn [{\n  json: {\n    ...ctx,\n    amount,\n    currency: cfg.currency || 'INR',\n    customer,\n    reference_id: `lead_${String(ctx.lead_id).slice(0, 8)}_${Date.now().toString(36)}`,\n    description: `Website development — ${ctx.business_name}`.slice(0, 250),\n    expire_by: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1400,
+        100
+      ],
+      "id": "8dcf39c3-365d-4470-af70-3c56d9066629",
+      "name": "🧮 Payment Payload"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 60000
+        },
+        "url": "https://api.razorpay.com/v1/payment_links",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"amount\": {{ $json.amount }},\n  \"currency\": {{ JSON.stringify($json.currency) }},\n  \"accept_partial\": false,\n  \"description\": {{ JSON.stringify($json.description) }},\n  \"reference_id\": {{ JSON.stringify($json.reference_id) }},\n  \"customer\": {{ JSON.stringify($json.customer) }},\n  \"notify\": { \"sms\": {{ Boolean($json.phone) }}, \"email\": {{ Boolean($json.email) }} },\n  \"reminder_enable\": true,\n  \"expire_by\": {{ $json.expire_by }},\n  \"notes\": {\n    \"lead_id\": {{ JSON.stringify($json.lead_id) }},\n    \"contact_id\": {{ JSON.stringify($json.contact_id || '') }},\n    \"business_name\": {{ JSON.stringify($json.business_name) }}\n  },\n  \"callback_method\": \"get\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1640,
+        100
+      ],
+      "id": "77031712-a70e-49dd-be7a-7ebd1152525d",
+      "name": "💳 Razorpay · Create Payment Link",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 4000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🧮 Payment Payload').item.json;\nconst r = $json || {};\n\nif (!r.id || !r.short_url) {\n  throw new Error('Razorpay response missing id/short_url: ' + JSON.stringify(r).slice(0, 400));\n}\n\nreturn [{\n  json: {\n    ...ctx,\n    razorpay_link_id: r.id,\n    payment_url: r.short_url,\n    amount_display: (Number(r.amount || ctx.amount) / 100).toLocaleString('en-IN'),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1880,
+        100
+      ],
+      "id": "51927aac-c921-48c2-a840-2132100063a8",
+      "name": "🧷 Capture Link"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_create_payment",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":    {{ JSON.stringify($json.lead_id) }},\n  \"p_contact_id\": {{ JSON.stringify($json.contact_id) }},\n  \"p_link_id\":    {{ JSON.stringify($json.razorpay_link_id) }},\n  \"p_amount\":     {{ $json.amount }},\n  \"p_currency\":   {{ JSON.stringify($json.currency) }},\n  \"p_url\":        {{ JSON.stringify($json.payment_url) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2120,
+        100
+      ],
+      "id": "347463b7-744c-4f4a-8e44-a6f9728d3bbd",
+      "name": "💾 Store Payment Record"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🧷 Capture Link').item.json;\nconst cfg = $('⚙️ Config').first().json;\nconst name = ctx.contact_name && ctx.contact_name !== 'Owner' ? ctx.contact_name : 'there';\nconst price = `${ctx.currency === 'INR' ? '₹' : ctx.currency + ' '}${ctx.amount_display}`;\n\nconst email_body =\n`Hi ${name},\n\nBrilliant — let's get ${ctx.business_name} online properly.\n\nHere's your secure payment link (${price}, one-off):\n${ctx.payment_url}\n\nWhat happens next:\n1. You pay through the link above (UPI, card or netbanking).\n2. I build the full site and put it live within 48 hours.\n3. You get the link plus everything needed to hand it to anyone later.\n\nThe link is valid for 7 days. Shout if you'd like anything changed before we start.\n\n${cfg.sender_name}`;\n\nconst whatsapp_body =\n`Great! Here's your secure payment link for ${ctx.business_name} (${price} one-off):\n\n${ctx.payment_url}\n\nOnce it's paid I'll have the full site live within 48 hours 🚀`;\n\nreturn [{\n  json: {\n    ...ctx,\n    prototype_url: ctx.prototype_url || '',\n    subject: `Payment link — ${ctx.business_name} website`,\n    email_body,\n    whatsapp_body,\n    stage_label: 'PAYMENT_LINK',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2360,
+        100
+      ],
+      "id": "6826f242-cd13-4d69-bd58-1f24f9793d06",
+      "name": "💌 Compose Payment Message"
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3100,
+        -60
+      ],
+      "id": "a1e4bc7b-78d3-47ba-bcdf-c57c97617a3a",
+      "name": "🔗 Merge Messages"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c7a7cb07-3b8a-4d9d-8a44-da845ba567f6",
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a7748444-3ee1-4443-97ee-2f597c158da0",
+                    "leftValue": "={{ $json.phone }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true,
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        3340,
+        -60
+      ],
+      "id": "08524c7d-1a8e-41f8-accc-179fa5a6d3c5",
+      "name": "🔀 Send Channel"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "fromEmail": "={{ $('⚙️ Config').first().json.sender_email }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.email_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        3580,
+        -160
+      ],
+      "id": "adb0b591-2e48-4c49-96bc-8c86124be520",
+      "name": "📧 Send Email",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 60000
+        },
+        "url": "={{ $('⚙️ Config').first().json.evolution_url }}/message/sendText/{{ $('⚙️ Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": {{ JSON.stringify($json.phone) }},\n  \"delay\": 1200,\n  \"linkPreview\": true,\n  \"text\": {{ JSON.stringify($json.whatsapp_body) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3580,
+        40
+      ],
+      "id": "1f508f22-63a1-410e-af3a-9f89cee6e5d8",
+      "name": "💬 Send WhatsApp",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3820,
+        -60
+      ],
+      "id": "c315d628-7333-4867-a718-0e8ff8f53d80",
+      "name": "🔗 Merge Sends"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_log_message",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":    {{ JSON.stringify($('🔗 Merge Messages').first().json.lead_id) }},\n  \"p_contact_id\": {{ JSON.stringify($('🔗 Merge Messages').first().json.contact_id) }},\n  \"p_direction\":  \"outbound\",\n  \"p_channel\":    {{ JSON.stringify($('🔗 Merge Messages').first().json.channel) }},\n  \"p_body\":       {{ JSON.stringify($('🔗 Merge Messages').first().json.email_body) }},\n  \"p_subject\":    {{ JSON.stringify($('🔗 Merge Messages').first().json.subject) }},\n  \"p_intent\":     {{ JSON.stringify($('🔗 Merge Messages').first().json.stage_label) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4060,
+        -60
+      ],
+      "id": "8f25a565-54d4-4db6-8d4c-a0bba747ce8f",
+      "name": "📝 Log Outbound",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## PHASE 3 · Build & bill\n**Prototype path** – Hermes writes a full one-page site, it goes live on\nVercel, the link is sent, lead → `prototype_sent`.\n\n**Payment path** – triggered when Workflow 2 classifies a reply as\n`APPROVED`. Creates a Razorpay link, stores it, sends it, lead →\n`payment_sent`.\n\nThe 30-min schedule is only a safety net for leads whose webhook handoff\nfailed — `sales_claim_leads` uses `FOR UPDATE SKIP LOCKED` so it can\nnever double-build.",
+        "width": 620,
+        "height": 380,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        -560
+      ],
+      "id": "a1d9a7d5-f80f-4b07-9976-00be9f5885fb",
+      "name": "Note 1"
+    },
+    {
+      "parameters": {
+        "content": "### Free models & big HTML\nA full page is ~6-8k tokens. Free models often truncate — that's what\n**🧽 Extract & Validate HTML** catches (it throws instead of deploying a\nbroken page). If it fires often, point `OPENROUTER_MODEL_CODER` at a\npaid model; it's a few cents per site.",
+        "width": 420,
+        "height": 260,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        -560
+      ],
+      "id": "eb58dac9-d1ac-4650-b6c8-cf9495ab7fcf",
+      "name": "Note 2"
+    },
+    {
+      "parameters": {
+        "content": "### Amount is in **paise**\n`OFFER_PRICE_PAISE=150000` → ₹1,500.\nUse Razorpay **test mode** keys until you've seen the whole flow work end\nto end.",
+        "width": 400,
+        "height": 180,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        320
+      ],
+      "id": "fed4c955-7bd7-41cd-a15a-c5460741b6c9",
+      "name": "Note 3"
+    }
+  ],
+  "connections": {
+    "🌐 Webhook · build-prototype": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏱ Safety Net (30 min)": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Config": {
+      "main": [
+        [
+          {
+            "node": "🧭 Resolve Trigger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧭 Resolve Trigger": {
+      "main": [
+        [
+          {
+            "node": "❓ Direct Or Claim?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ Direct Or Claim?": {
+      "main": [
+        [
+          {
+            "node": "📇 Load Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🎣 Claim Engaged Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📇 Load Lead": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎣 Claim Engaged Leads": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Sources": {
+      "main": [
+        [
+          {
+            "node": "🧾 Normalise Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧾 Normalise Lead": {
+      "main": [
+        [
+          {
+            "node": "🔀 Prototype Or Payment?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Prototype Or Payment?": {
+      "main": [
+        [
+          {
+            "node": "🎨 Build Site Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🧮 Payment Payload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "⏭ Already Has Prototype",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎨 Build Site Prompt": {
+      "main": [
+        [
+          {
+            "node": "🧠 Hermes · Generate HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 Hermes · Generate HTML": {
+      "main": [
+        [
+          {
+            "node": "🧽 Extract & Validate HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧽 Extract & Validate HTML": {
+      "main": [
+        [
+          {
+            "node": "▲ Deploy To Vercel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▲ Deploy To Vercel": {
+      "main": [
+        [
+          {
+            "node": "🔗 Prototype URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔗 Prototype URL": {
+      "main": [
+        [
+          {
+            "node": "💾 Save Prototype URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Save Prototype URL": {
+      "main": [
+        [
+          {
+            "node": "💌 Compose Prototype Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧮 Payment Payload": {
+      "main": [
+        [
+          {
+            "node": "💳 Razorpay · Create Payment Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💳 Razorpay · Create Payment Link": {
+      "main": [
+        [
+          {
+            "node": "🧷 Capture Link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧷 Capture Link": {
+      "main": [
+        [
+          {
+            "node": "💾 Store Payment Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Store Payment Record": {
+      "main": [
+        [
+          {
+            "node": "💌 Compose Payment Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💌 Compose Prototype Message": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💌 Compose Payment Message": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Messages",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Messages": {
+      "main": [
+        [
+          {
+            "node": "🔀 Send Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Send Channel": {
+      "main": [
+        [
+          {
+            "node": "📧 Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "💬 Send WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Send Email": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Sends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Send WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Sends",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Sends": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Outbound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    "ai-sales-machine"
+  ],
+  "versionId": "e8d11a2c-25c2-42b4-be99-7e627f80218b"
+}
