@@ -1,0 +1,1088 @@
+{
+  "name": "01 · Lead Discovery & Omnichannel Outreach",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -480,
+        0
+      ],
+      "id": "eec00699-a614-4dd1-85ed-b35d3a039b9a",
+      "name": "⏱ Every 6 Hours"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        200
+      ],
+      "id": "a60861f5-d489-4bac-9936-2e5c30a85d69",
+      "name": "▶️ Manual Test"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86bddf91-73d5-4d81-bd9a-be3e502e4340",
+              "name": "supabase_url",
+              "value": "={{ $env.SUPABASE_URL || 'https://YOUR-PROJECT.supabase.co' }}",
+              "type": "string"
+            },
+            {
+              "id": "5d761811-ff63-47fe-b6f5-76998a881ef6",
+              "name": "evolution_url",
+              "value": "={{ ($env.EVOLUTION_API_URL || 'https://your-evolution.up.railway.app').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "25fbebf6-a3d9-46d2-b245-58f589e75aaf",
+              "name": "evolution_instance",
+              "value": "={{ $env.EVOLUTION_INSTANCE || 'sales-bot' }}",
+              "type": "string"
+            },
+            {
+              "id": "aad1ec2d-b0b2-4de5-8482-b069a7968707",
+              "name": "n8n_webhook_base",
+              "value": "={{ ($env.N8N_WEBHOOK_BASE || $env.WEBHOOK_URL || 'https://your-n8n.example.com').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "57930a7d-0d23-42eb-9483-4a963e0d469b",
+              "name": "public_site_url",
+              "value": "={{ $env.PUBLIC_SITE_URL || 'https://your-agency.example.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "f8185a6f-f711-45dc-90e1-79dc56eab743",
+              "name": "sender_email",
+              "value": "={{ $env.SENDER_EMAIL || 'you@yourdomain.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "943cfc70-22ec-44b2-a7d2-16fa0cf7c442",
+              "name": "sender_name",
+              "value": "={{ $env.SENDER_NAME || 'Alex' }}",
+              "type": "string"
+            },
+            {
+              "id": "da7c85b9-f217-4549-bd60-93ec14920248",
+              "name": "agency_name",
+              "value": "={{ $env.AGENCY_NAME || 'Studio Nova' }}",
+              "type": "string"
+            },
+            {
+              "id": "98f86978-a20b-4f85-911c-0e2a177c3473",
+              "name": "default_country_code",
+              "value": "={{ $env.DEFAULT_COUNTRY_CODE || '91' }}",
+              "type": "string"
+            },
+            {
+              "id": "090bd432-ae4b-478d-b51a-4f2513544e26",
+              "name": "model_copywriter",
+              "value": "={{ $env.OPENROUTER_MODEL_COPY || 'nousresearch/hermes-3-llama-3.1-405b:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "84daa870-631d-4fc1-a642-cdefb0ae14c5",
+              "name": "model_triage",
+              "value": "={{ $env.OPENROUTER_MODEL_TRIAGE || 'meta-llama/llama-3.3-70b-instruct:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "1b5b938c-cd28-41ef-af4a-8a04eea7c071",
+              "name": "model_coder",
+              "value": "={{ $env.OPENROUTER_MODEL_CODER || 'deepseek/deepseek-chat-v3-0324:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "e1587d24-ed0e-4bbf-8fb4-10a97370c839",
+              "name": "price_paise",
+              "value": "={{ Number($env.OFFER_PRICE_PAISE || 150000) }}",
+              "type": "number"
+            },
+            {
+              "id": "6c50eefb-38c7-4631-8ce5-84b97cc5cf9b",
+              "name": "currency",
+              "value": "={{ $env.OFFER_CURRENCY || 'INR' }}",
+              "type": "string"
+            },
+            {
+              "id": "d7844ee4-b24d-4c39-a859-0ed712650d44",
+              "name": "max_new_leads_per_run",
+              "value": "={{ Number($env.MAX_NEW_LEADS_PER_RUN || 10) }}",
+              "type": "number"
+            },
+            {
+              "id": "7fadcefc-48c8-4b80-8c27-8de24118e833",
+              "name": "whatsapp_daily_cap",
+              "value": "={{ Number($env.WHATSAPP_DAILY_CAP || 40) }}",
+              "type": "number"
+            },
+            {
+              "id": "32c43d99-1952-49b2-83f4-f430ad25a5a1",
+              "name": "dry_run",
+              "value": "={{ ($env.DRY_RUN || 'false') === 'true' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "b3ca3e5a-8cce-44b5-9848-00f690c6fdeb",
+              "name": "alert_channel_url",
+              "value": "={{ $env.ALERT_WEBHOOK_URL || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -240,
+        80
+      ],
+      "id": "45cc1b6e-eccf-4918-a707-77d9503c0ed3",
+      "name": "⚙️ Config"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Edit this list — one entry per niche/city you want to farm.\n// Keep it small: Apify's free $5/month is roughly 5,000 places.\nconst searches = [\n  { niche: 'plumber',      location: 'Jaipur',    query: 'plumber in Jaipur' },\n  { niche: 'dentist',      location: 'Jaipur',    query: 'dental clinic in Jaipur' },\n  { niche: 'gym',          location: 'Udaipur',   query: 'gym in Udaipur' },\n];\n\n// Rotate so every run works a different slice instead of always hammering\n// the first search term (and re-scraping the same already-known places).\nconst perRun = Number($env.SEARCHES_PER_RUN || 1);\nconst cursor = Math.floor(Date.now() / (1000 * 60 * 60 * 6)) % searches.length;\nconst picked = [];\nfor (let i = 0; i < Math.min(perRun, searches.length); i++) {\n  picked.push(searches[(cursor + i) % searches.length]);\n}\n\nreturn picked.map((s) => ({ json: s }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        80
+      ],
+      "id": "7ec5e426-0ec5-4c6c-a18d-de789811dd7e",
+      "name": "🎯 Search Plan"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 300000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "url": "https://api.apify.com/v2/acts/compass~google-maps-scraper/run-sync-get-dataset-items",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "timeout",
+              "value": "300"
+            },
+            {
+              "name": "memory",
+              "value": "1024"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"searchStringsArray\": [{{ JSON.stringify($json.query) }}],\n  \"maxCrawledPlacesPerSearch\": {{ Number($env.APIFY_MAX_PLACES || 20) }},\n  \"language\": \"en\",\n  \"skipClosedPlaces\": true,\n  \"scrapeContacts\": false,\n  \"proxyConfig\": { \"useApifyProxy\": true }\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        80
+      ],
+      "id": "78b6b1de-d0a7-469b-bc60-c379ba4a9f4c",
+      "name": "🗺 Apify · Google Maps Scraper",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 10000,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// One Apify item == one Google Maps place.\n// We keep only businesses that (a) have no website and (b) are reachable.\nconst cfg = $('⚙️ Config').first().json;\nconst plan = $('🎯 Search Plan').first().json;\nconst out = [];\nconst seen = new Set();\n\nconst digits = (v) => String(v || '').replace(/\\D/g, '');\n\nfor (const item of $input.all()) {\n  const p = item.json || {};\n\n  // --- has a website already? not our customer ---\n  const site = (p.website || p.webResults?.[0]?.url || '').trim();\n  if (site && !/facebook\\.com|instagram\\.com|linktr\\.ee|wa\\.me/i.test(site)) continue;\n\n  // --- permanently closed? skip ---\n  if (p.permanentlyClosed === true || p.temporarilyClosed === true) continue;\n\n  // --- contact details ---\n  let phone = digits(p.phoneUnformatted || p.phone);\n  if (phone && phone.length === 10) phone = (cfg.default_country_code || '91') + phone;   // bare Indian mobile\n  if (phone && phone.length < 11) phone = '';                                             // landline/garbage\n  const email = String(p.email || p.emails?.[0] || '').trim().toLowerCase();\n\n  if (!phone && !email) continue;      // no way to reach them\n\n  const key = phone || email;\n  if (seen.has(key)) continue;         // duplicate inside this same batch\n  seen.add(key);\n\n  out.push({\n    json: {\n      business_name: p.title || p.name || '',\n      niche: plan.niche,\n      location: plan.location || p.city || '',\n      google_place_id: p.placeId || p.fid || null,\n      phone,\n      email,\n      contact_name: p.ownerName || '',\n      metadata: {\n        address: p.address || '',\n        category: p.categoryName || '',\n        rating: p.totalScore ?? null,\n        reviews: p.reviewsCount ?? null,\n        maps_url: p.url || '',\n        source: 'apify:compass~google-maps-scraper',\n      },\n    },\n  });\n}\n\n// Respect the per-run cap so we never blast 200 messages in one go.\nconst capped = out.slice(0, Number(cfg.max_new_leads_per_run || 10));\n\n// Always emit something so the \"nothing to do\" branch is visible in the log.\nreturn capped.length ? capped : [{ json: { empty: true, reason: 'no website-less businesses in this batch' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        80
+      ],
+      "id": "c65d0520-9f00-4345-8faa-d22cf25c3e9b",
+      "name": "🧹 Normalise & Qualify"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e7663a4e-e36a-4690-bd60-24305c97fddb",
+              "leftValue": "={{ $json.business_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        700,
+        80
+      ],
+      "id": "4c653552-c914-490a-bbcc-beab2e7bc4b2",
+      "name": "❓ Any Qualified Leads?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        940,
+        220
+      ],
+      "id": "c7bc9a23-f561-4173-8543-62bff8c6149c",
+      "name": "🚪 Nothing To Do"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_upsert_lead",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_payload\": {\n    \"business_name\":   {{ JSON.stringify($json.business_name) }},\n    \"niche\":           {{ JSON.stringify($json.niche) }},\n    \"location\":        {{ JSON.stringify($json.location) }},\n    \"google_place_id\": {{ JSON.stringify($json.google_place_id) }},\n    \"phone\":           {{ JSON.stringify($json.phone) }},\n    \"email\":           {{ JSON.stringify($json.email) }},\n    \"contact_name\":    {{ JSON.stringify($json.contact_name) }},\n    \"metadata\":        {{ JSON.stringify($json.metadata) }}\n  }\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        940,
+        20
+      ],
+      "id": "468b5c31-3331-4e45-a29b-80ad14ea28f6",
+      "name": "💾 Upsert Lead + Contact",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// The RPC returns a single-row table -> unwrap it, drop anything we have\n// already contacted before, and drop rows where the RPC errored.\nconst out = [];\nfor (const item of $input.all()) {\n  const row = Array.isArray(item.json) ? item.json[0] : (item.json?.[0] ?? item.json);\n  if (!row || !row.lead_id) continue;\n  if (row.is_new === false) continue;      // already in the pipeline\n  out.push({ json: row });\n}\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        20
+      ],
+      "id": "fd9f28c7-e7a9-4d90-9eb0-0eab6033b421",
+      "name": "🆕 Keep Only Brand-New Leads"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1420,
+        20
+      ],
+      "id": "e5686c20-e30a-41ce-bcfb-f8e1e0b4ffce",
+      "name": "🔁 One Lead At A Time"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1660,
+        -140
+      ],
+      "id": "9d2113d5-2eb0-4095-8682-463f1c92b78a",
+      "name": "✅ Run Complete"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2c998a42-ec42-4e5a-ab1e-a0e9f5510d80",
+              "name": "system_prompt",
+              "value": "=You are a top-performing B2B outreach copywriter for {{ $('⚙️ Config').first().json.agency_name }}, a small web studio. You write like a real human: short sentences, zero corporate filler, no emoji spam, no 'I hope this email finds you well'. You always answer with raw JSON and nothing else.",
+              "type": "string"
+            },
+            {
+              "id": "314d1bd0-766a-4531-a0fd-83a41baf0986",
+              "name": "prompt",
+              "value": "=Business: {{ $json.business_name }}\nIndustry: {{ $json.niche }}\nCity: {{ $json.location }}\nOwner name (may be generic): {{ $json.contact_name }}\nMy name: {{ $('⚙️ Config').first().json.sender_name }}\nMy studio: {{ $('⚙️ Config').first().json.agency_name }}\n\nThis business has NO website. Write outreach offering a free, no-strings single-page website mockup built for them.\n\nRules:\n- Reference the business by name and the fact they are a {{ $json.niche }} in {{ $json.location }}.\n- Lead with what they lose without a site (customers googling them find nothing).\n- The ask is tiny: \"want me to send it over?\" — never ask for money or a meeting.\n- Email: max 90 words, plain text, no links, sign off as {{ $('⚙️ Config').first().json.sender_name }}.\n- Subject: max 6 words, lowercase, looks like a human typed it, no clickbait.\n- WhatsApp: max 35 words, casual, one question mark at the end.\n\nReturn ONLY this JSON object, no markdown fence, no commentary:\n{\"subject\": \"...\", \"email\": \"...\", \"whatsapp\": \"...\"}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1660,
+        60
+      ],
+      "id": "c8ce2315-13ae-47fd-b8d9-5cfcd424553b",
+      "name": "✍️ Build Copy Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 180000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "={{ $('⚙️ Config').first().json.public_site_url }}"
+            },
+            {
+              "name": "X-Title",
+              "value": "Omnichannel AI Sales Machine"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": {{ JSON.stringify($('⚙️ Config').first().json.model_copywriter) }},\n  \"temperature\": 0.8,\n  \"max_tokens\": 700,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt || 'You are a helpful assistant.') }} },\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.prompt) }} }\n  ]\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1900,
+        60
+      ],
+      "id": "7b5c900d-03d1-4010-9116-d14e6b63b97e",
+      "name": "🧠 Hermes · Write Outreach",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// LLMs love to wrap JSON in prose or ```json fences. Be forgiving,\n// and always fall back to a hand-written template so a flaky free model\n// can never break the send.\nconst lead = $('🔁 One Lead At A Time').item.json;\nconst cfg  = $('⚙️ Config').first().json;\n\nconst raw = $json?.choices?.[0]?.message?.content ?? '';\n\nconst fallback = {\n  subject: `quick idea for ${lead.business_name}`,\n  email:\n`Hi ${lead.contact_name && lead.contact_name !== 'Owner' ? lead.contact_name : 'there'},\n\nI was looking up ${lead.niche}s in ${lead.location} and found ${lead.business_name} — but no website, so anyone who googles you lands on a competitor instead.\n\nI build simple one-page sites for local businesses. I'd like to put together a free mockup for ${lead.business_name} so you can see what it would look like. No cost, no commitment.\n\nWant me to send it over?\n\n${cfg.sender_name}`,\n  whatsapp:\n`Hi! I'm ${cfg.sender_name}. I noticed ${lead.business_name} doesn't have a website yet — I'd like to build you a free one-page mockup to look at. Want me to send it?`,\n};\n\nfunction parse(text) {\n  if (!text) return null;\n  let t = String(text).trim();\n  t = t.replace(/^\\`\\`\\`(?:json)?/i, '').replace(/\\`\\`\\`$/, '').trim();\n  const start = t.indexOf('{');\n  const end   = t.lastIndexOf('}');\n  if (start === -1 || end <= start) return null;\n  try { return JSON.parse(t.slice(start, end + 1)); } catch { return null; }\n}\n\nconst ai = parse(raw) || {};\nconst clean = (v, max) => String(v || '').replace(/\\s+$/,'').slice(0, max);\n\nconst subject  = clean(ai.subject, 120)   || fallback.subject;\nconst email    = clean(ai.email, 2000)    || fallback.email;\nconst whatsapp = clean(ai.whatsapp, 600)  || fallback.whatsapp;\n\nreturn [{\n  json: {\n    ...lead,\n    subject,\n    email_body: email,\n    whatsapp_body: whatsapp,\n    ai_used: Boolean(parse(raw)),\n    has_email: Boolean(lead.email),\n    has_phone: Boolean(lead.phone),\n    dry_run: cfg.dry_run === true,\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2140,
+        60
+      ],
+      "id": "8c0f9a91-892e-4443-b2ce-52263b1e37d3",
+      "name": "🔎 Parse AI Copy"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3ceb58ba-3008-4203-9f1a-81b5e2cc805b",
+              "leftValue": "={{ $json.dry_run }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2380,
+        60
+      ],
+      "id": "bd85aae1-c948-4fb9-8e1d-5182401e1925",
+      "name": "🧪 Dry Run?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2620,
+        -80
+      ],
+      "id": "ac5cc61f-cef0-4f62-a58d-bbb9b2a6e19e",
+      "name": "📋 Preview Only (no send)"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "83e98686-ec3a-4c27-9fa9-d15b25cbcd77",
+                    "leftValue": "={{ $json.has_email }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3349ed19-4cbb-44a5-bbd0-4486f4a31d13",
+                    "leftValue": "={{ $json.has_phone }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true,
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        2620,
+        160
+      ],
+      "id": "15cc871c-0288-4b51-8237-3db39924c358",
+      "name": "🔀 Route Channels"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "fromEmail": "={{ $('⚙️ Config').first().json.sender_email }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.email_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2880,
+        60
+      ],
+      "id": "d4ce0778-768d-4bdc-a4d0-7e2abc5cb775",
+      "name": "📧 Gmail · Send Outreach",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 60000
+        },
+        "url": "={{ $('⚙️ Config').first().json.evolution_url }}/message/sendText/{{ $('⚙️ Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": {{ JSON.stringify($json.phone) }},\n  \"delay\": 1200,\n  \"linkPreview\": true,\n  \"text\": {{ JSON.stringify($json.whatsapp_body) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2880,
+        260
+      ],
+      "id": "9045f7a0-c7b6-44cd-84d8-e02063ba4bbd",
+      "name": "💬 WhatsApp · Send Outreach",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3120,
+        160
+      ],
+      "id": "3d354af8-6950-48c1-8274-65352664f9dc",
+      "name": "🔗 Merge Sends"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Both channels may have fired for the same lead — collapse back to one item.\nconst lead = $('🔎 Parse AI Copy').first().json;\nlet emailOk = false;\nlet waOk = false;\n\nfor (const item of $input.all()) {\n  const j = item.json || {};\n  if (j.accepted !== undefined || j.messageId !== undefined) emailOk = true;\n  if (j.key !== undefined || j.status !== undefined) waOk = true;\n}\n\nreturn [{\n  json: {\n    ...lead,\n    sent_email: emailOk,\n    sent_whatsapp: waOk,\n    sent_any: emailOk || waOk,\n    channel_used: [emailOk ? 'email' : null, waOk ? 'whatsapp' : null].filter(Boolean).join('+'),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3340,
+        160
+      ],
+      "id": "792036c0-81f6-463e-a1ba-7f0708051586",
+      "name": "🧾 Summarise Send"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_log_message",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":    {{ JSON.stringify($json.lead_id) }},\n  \"p_contact_id\": {{ JSON.stringify($json.contact_id) }},\n  \"p_direction\":  \"outbound\",\n  \"p_channel\":    {{ JSON.stringify($json.channel_used || 'none') }},\n  \"p_body\":       {{ JSON.stringify(($json.sent_email ? $json.email_body : '') + ($json.sent_whatsapp ? '\\n---\\n' + $json.whatsapp_body : '')) }},\n  \"p_subject\":    {{ JSON.stringify($json.subject) }},\n  \"p_intent\":     \"OUTREACH\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3580,
+        160
+      ],
+      "id": "1ec70036-fde3-4672-9eea-f8394c7c03a1",
+      "name": "📝 Log Outbound Message",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_mark_contacted",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_contact_id\": {{ JSON.stringify($('🧾 Summarise Send').item.json.contact_id) }},\n  \"p_lead_id\":    {{ JSON.stringify($('🧾 Summarise Send').item.json.lead_id) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3820,
+        160
+      ],
+      "id": "2cf14808-14cb-4aaf-b38d-c0707f4bcd70",
+      "name": "✅ Mark Contacted",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "amount": "={{ 45 + Math.floor(Math.random() * 75) }}",
+        "unit": "seconds"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4060,
+        160
+      ],
+      "id": "2f3a70b1-a71d-4c99-b76c-4b31cd56ee68",
+      "name": "⏳ Throttle (WhatsApp safety)",
+      "webhookId": "aa445124-ac59-4127-bac4-53bd1b294441"
+    },
+    {
+      "parameters": {
+        "content": "## PHASE 1 · Find & contact\nRuns every 6h.\n\n**Setup**\n1. Credentials: *Apify* (Header Auth `Authorization: Bearer <APIFY_TOKEN>`), *Supabase API*, *OpenRouter* (Header Auth `Authorization: Bearer <KEY>`), *SMTP*, *Evolution* (Header Auth `apikey: <KEY>`).\n2. Edit **🎯 Search Plan** with your niches/cities.\n3. Set `DRY_RUN=true` in n8n env for the first run — it builds the copy but sends nothing.",
+        "width": 620,
+        "height": 300,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -480,
+        -360
+      ],
+      "id": "19afbf84-f96f-49ee-b195-736543307d37",
+      "name": "Note 1"
+    },
+    {
+      "parameters": {
+        "content": "### Only businesses with NO website\n`🧹 Normalise & Qualify` drops anyone with a real site, keeps social-only\nlistings, normalises phones to international digits (no `+`), and caps the\nbatch at `MAX_NEW_LEADS_PER_RUN`.",
+        "width": 380,
+        "height": 230,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        420,
+        -280
+      ],
+      "id": "4226dd38-43b0-4b3b-b92b-b36c898d298b",
+      "name": "Note 2"
+    },
+    {
+      "parameters": {
+        "content": "### ⚠️ WhatsApp ban safety\nThe loop sends **one lead at a time** with a random 45–120 s pause.\nKeep it under ~40 messages/day on a fresh number and warm the SIM up\nfor a week before scaling.",
+        "width": 400,
+        "height": 250,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3980,
+        -180
+      ],
+      "id": "59aaa471-c83e-464f-89e9-717c2cff90e9",
+      "name": "Note 3"
+    }
+  ],
+  "connections": {
+    "⏱ Every 6 Hours": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▶️ Manual Test": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Config": {
+      "main": [
+        [
+          {
+            "node": "🎯 Search Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎯 Search Plan": {
+      "main": [
+        [
+          {
+            "node": "🗺 Apify · Google Maps Scraper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🗺 Apify · Google Maps Scraper": {
+      "main": [
+        [
+          {
+            "node": "🧹 Normalise & Qualify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧹 Normalise & Qualify": {
+      "main": [
+        [
+          {
+            "node": "❓ Any Qualified Leads?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ Any Qualified Leads?": {
+      "main": [
+        [
+          {
+            "node": "💾 Upsert Lead + Contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🚪 Nothing To Do",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Upsert Lead + Contact": {
+      "main": [
+        [
+          {
+            "node": "🆕 Keep Only Brand-New Leads",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🆕 Keep Only Brand-New Leads": {
+      "main": [
+        [
+          {
+            "node": "🔁 One Lead At A Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔁 One Lead At A Time": {
+      "main": [
+        [
+          {
+            "node": "✅ Run Complete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "✍️ Build Copy Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✍️ Build Copy Prompt": {
+      "main": [
+        [
+          {
+            "node": "🧠 Hermes · Write Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 Hermes · Write Outreach": {
+      "main": [
+        [
+          {
+            "node": "🔎 Parse AI Copy",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔎 Parse AI Copy": {
+      "main": [
+        [
+          {
+            "node": "🧪 Dry Run?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧪 Dry Run?": {
+      "main": [
+        [
+          {
+            "node": "📋 Preview Only (no send)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🔀 Route Channels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📋 Preview Only (no send)": {
+      "main": [
+        [
+          {
+            "node": "⏳ Throttle (WhatsApp safety)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Route Channels": {
+      "main": [
+        [
+          {
+            "node": "📧 Gmail · Send Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "💬 WhatsApp · Send Outreach",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Gmail · Send Outreach": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Sends",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 WhatsApp · Send Outreach": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Sends",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Sends": {
+      "main": [
+        [
+          {
+            "node": "🧾 Summarise Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧾 Summarise Send": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Outbound Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Log Outbound Message": {
+      "main": [
+        [
+          {
+            "node": "✅ Mark Contacted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Mark Contacted": {
+      "main": [
+        [
+          {
+            "node": "⏳ Throttle (WhatsApp safety)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏳ Throttle (WhatsApp safety)": {
+      "main": [
+        [
+          {
+            "node": "🔁 One Lead At A Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    "ai-sales-machine"
+  ],
+  "versionId": "2f1e3eba-5d88-49f0-97e9-d30d76474799"
+}

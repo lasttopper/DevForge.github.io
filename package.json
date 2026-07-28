@@ -1,0 +1,30 @@
+{
+  "name": "omnichannel-ai-sales-machine",
+  "version": "1.0.0",
+  "private": true,
+  "description": "n8n template pack: Apify -> n8n -> Hermes/OpenRouter -> Supabase -> Razorpay omnichannel sales automation",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "validate": "node scripts/validate.mjs",
+    "test": "node scripts/test-code-nodes.mjs",
+    "test:sql": "node scripts/test-sql.mjs",
+    "verify": "node scripts/verify-against-n8n.mjs",
+    "check": "npm run build && npm run validate && npm test && npm run test:sql"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.4"
+  },
+  "keywords": [
+    "n8n",
+    "automation",
+    "ai",
+    "sales",
+    "whatsapp",
+    "supabase",
+    "razorpay",
+    "openrouter",
+    "apify"
+  ]
+}

@@ -1,0 +1,1348 @@
+{
+  "name": "04 · Razorpay Webhook, Full Build & Delivery",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "razorpay-webhook",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -620,
+        0
+      ],
+      "id": "5379d534-8e5d-4ee9-97a2-1e28f9b72afa",
+      "name": "🌐 Webhook · razorpay",
+      "webhookId": "e81a5f30-6c72-4b19-9d84-1f0ac6b52d77"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "86bddf91-73d5-4d81-bd9a-be3e502e4340",
+              "name": "supabase_url",
+              "value": "={{ $env.SUPABASE_URL || 'https://YOUR-PROJECT.supabase.co' }}",
+              "type": "string"
+            },
+            {
+              "id": "5d761811-ff63-47fe-b6f5-76998a881ef6",
+              "name": "evolution_url",
+              "value": "={{ ($env.EVOLUTION_API_URL || 'https://your-evolution.up.railway.app').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "25fbebf6-a3d9-46d2-b245-58f589e75aaf",
+              "name": "evolution_instance",
+              "value": "={{ $env.EVOLUTION_INSTANCE || 'sales-bot' }}",
+              "type": "string"
+            },
+            {
+              "id": "aad1ec2d-b0b2-4de5-8482-b069a7968707",
+              "name": "n8n_webhook_base",
+              "value": "={{ ($env.N8N_WEBHOOK_BASE || $env.WEBHOOK_URL || 'https://your-n8n.example.com').replace(/\\/+$/, '') }}",
+              "type": "string"
+            },
+            {
+              "id": "57930a7d-0d23-42eb-9483-4a963e0d469b",
+              "name": "public_site_url",
+              "value": "={{ $env.PUBLIC_SITE_URL || 'https://your-agency.example.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "f8185a6f-f711-45dc-90e1-79dc56eab743",
+              "name": "sender_email",
+              "value": "={{ $env.SENDER_EMAIL || 'you@yourdomain.com' }}",
+              "type": "string"
+            },
+            {
+              "id": "943cfc70-22ec-44b2-a7d2-16fa0cf7c442",
+              "name": "sender_name",
+              "value": "={{ $env.SENDER_NAME || 'Alex' }}",
+              "type": "string"
+            },
+            {
+              "id": "da7c85b9-f217-4549-bd60-93ec14920248",
+              "name": "agency_name",
+              "value": "={{ $env.AGENCY_NAME || 'Studio Nova' }}",
+              "type": "string"
+            },
+            {
+              "id": "98f86978-a20b-4f85-911c-0e2a177c3473",
+              "name": "default_country_code",
+              "value": "={{ $env.DEFAULT_COUNTRY_CODE || '91' }}",
+              "type": "string"
+            },
+            {
+              "id": "090bd432-ae4b-478d-b51a-4f2513544e26",
+              "name": "model_copywriter",
+              "value": "={{ $env.OPENROUTER_MODEL_COPY || 'nousresearch/hermes-3-llama-3.1-405b:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "84daa870-631d-4fc1-a642-cdefb0ae14c5",
+              "name": "model_triage",
+              "value": "={{ $env.OPENROUTER_MODEL_TRIAGE || 'meta-llama/llama-3.3-70b-instruct:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "1b5b938c-cd28-41ef-af4a-8a04eea7c071",
+              "name": "model_coder",
+              "value": "={{ $env.OPENROUTER_MODEL_CODER || 'deepseek/deepseek-chat-v3-0324:free' }}",
+              "type": "string"
+            },
+            {
+              "id": "e1587d24-ed0e-4bbf-8fb4-10a97370c839",
+              "name": "price_paise",
+              "value": "={{ Number($env.OFFER_PRICE_PAISE || 150000) }}",
+              "type": "number"
+            },
+            {
+              "id": "6c50eefb-38c7-4631-8ce5-84b97cc5cf9b",
+              "name": "currency",
+              "value": "={{ $env.OFFER_CURRENCY || 'INR' }}",
+              "type": "string"
+            },
+            {
+              "id": "d7844ee4-b24d-4c39-a859-0ed712650d44",
+              "name": "max_new_leads_per_run",
+              "value": "={{ Number($env.MAX_NEW_LEADS_PER_RUN || 10) }}",
+              "type": "number"
+            },
+            {
+              "id": "7fadcefc-48c8-4b80-8c27-8de24118e833",
+              "name": "whatsapp_daily_cap",
+              "value": "={{ Number($env.WHATSAPP_DAILY_CAP || 40) }}",
+              "type": "number"
+            },
+            {
+              "id": "32c43d99-1952-49b2-83f4-f430ad25a5a1",
+              "name": "dry_run",
+              "value": "={{ ($env.DRY_RUN || 'false') === 'true' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "b3ca3e5a-8cce-44b5-9848-00f690c6fdeb",
+              "name": "alert_channel_url",
+              "value": "={{ $env.ALERT_WEBHOOK_URL || '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -380,
+        0
+      ],
+      "id": "bfaae1f0-c492-4d30-8ec6-275f7350d56e",
+      "name": "⚙️ Config"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Razorpay signs the RAW body with your webhook secret (HMAC-SHA256).\n// The webhook node must have \"Raw Body\" ON, otherwise the bytes change and\n// the signature will never match.\nconst crypto = require('crypto');\n\nconst hook   = $('🌐 Webhook · razorpay').first().json;\nconst secret = $env.RAZORPAY_WEBHOOK_SECRET || '';\n\nconst headers   = hook.headers || {};\nconst signature = headers['x-razorpay-signature'] || headers['X-Razorpay-Signature'] || '';\n\n// rawBody arrives base64-encoded in .body when rawBody=true\nlet raw = hook.body;\nif (raw && typeof raw === 'object' && raw.data) raw = raw.data;\nconst rawString = Buffer.isBuffer(raw)\n  ? raw.toString('utf8')\n  : (typeof raw === 'string'\n      ? (/^[A-Za-z0-9+/=]+$/.test(raw) && raw.length % 4 === 0\n          ? Buffer.from(raw, 'base64').toString('utf8')\n          : raw)\n      : JSON.stringify(raw ?? {}));\n\nlet payload;\ntry { payload = JSON.parse(rawString); }\ncatch { throw new Error('Webhook body is not JSON. Enable \"Raw Body\" on the Webhook node.'); }\n\nlet valid = false;\nif (secret && signature) {\n  const expected = crypto.createHmac('sha256', secret).update(rawString).digest('hex');\n  const a = Buffer.from(expected, 'utf8');\n  const b = Buffer.from(String(signature), 'utf8');\n  valid = a.length === b.length && crypto.timingSafeEqual(a, b);\n}\n\nif (!secret) {\n  // Loud, but don't hard-fail in test mode — you'd never see why nothing works.\n  console.warn('RAZORPAY_WEBHOOK_SECRET is not set — signature NOT verified.');\n}\n\nconst entity = payload?.payload?.payment_link?.entity\n            || payload?.payload?.payment?.entity\n            || {};\nconst paymentEntity = payload?.payload?.payment?.entity || {};\n\nreturn [{\n  json: {\n    valid: valid || !secret,\n    strict_valid: valid,\n    event: payload?.event || '',\n    link_id: entity.id || paymentEntity.invoice_id || '',\n    lead_id: entity.notes?.lead_id || paymentEntity.notes?.lead_id || '',\n    razorpay_payment_id: paymentEntity.id || entity.payment_id || null,\n    amount: Number(entity.amount ?? paymentEntity.amount ?? 0),\n    is_paid_event: ['payment_link.paid', 'payment.captured'].includes(payload?.event),\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -140,
+        0
+      ],
+      "id": "c335c80a-5b90-4f5f-a4fc-2cc00c603deb",
+      "name": "🔐 Verify Razorpay Signature"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "98787a1f-c685-41d6-88cb-71be3ab75477",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f1753dd4-97b2-4a8e-8662-01221909367c",
+              "leftValue": "={{ $json.is_paid_event }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        0
+      ],
+      "id": "62aed625-dec9-4a66-bdae-49389cdd59c5",
+      "name": "❓ Valid & Paid?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, ignored: true, reason: $json.valid ? \"not a paid event\" : \"bad signature\" }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        340,
+        180
+      ],
+      "id": "508dad02-7c27-498c-ae2b-1c9f947219da",
+      "name": "↩️ 200 OK (ignored)"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, accepted: true }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        340,
+        -160
+      ],
+      "id": "53da9344-d7cf-4e8e-9d70-8fa9465dae13",
+      "name": "↩️ 200 OK (accepted)"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_record_payment_paid",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_link_id\":    {{ JSON.stringify($('🔐 Verify Razorpay Signature').first().json.link_id) }},\n  \"p_payment_id\": {{ JSON.stringify($('🔐 Verify Razorpay Signature').first().json.razorpay_payment_id) }},\n  \"p_amount\":     {{ $('🔐 Verify Razorpay Signature').first().json.amount }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        580,
+        -160
+      ],
+      "id": "56f9392a-abc3-4364-807d-d4ef040e643a",
+      "name": "💰 Mark Payment Paid"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sig  = $('🔐 Verify Razorpay Signature').first().json;\nconst rows = Array.isArray($json) ? $json : ($json ? [$json] : []);\nconst row  = rows.find((r) => r && r.lead_id) || null;\n\nif (!row) {\n  throw new Error(\n    `Payment link ${sig.link_id} is not in the payments table. ` +\n    'Either it was created outside this system, or Workflow 3 failed to store it.'\n  );\n}\n\nif (row.already_paid) {\n  // Razorpay retries webhooks; the RPC is idempotent so just stop here.\n  return [{ json: { ...row, skip: true, reason: 'duplicate webhook' } }];\n}\n\nreturn [{\n  json: {\n    ...row,\n    skip: false,\n    razorpay_payment_id: sig.razorpay_payment_id,\n    amount_display: (Number(row.amount || sig.amount) / 100).toLocaleString('en-IN'),\n    contact_name: row.contact_name || 'there',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        820,
+        -160
+      ],
+      "id": "3553eaa6-eff3-434d-849e-92f4adc41730",
+      "name": "🧾 Payment Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cf06f90c-95ca-427f-a9a4-7bd4a8acfcce",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1060,
+        -160
+      ],
+      "id": "f176b4fc-31ba-47e9-9e5a-c017cd8831cc",
+      "name": "❓ First Time Paid?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1300,
+        20
+      ],
+      "id": "81a0743b-8332-43f1-a033-891eacf8f972",
+      "name": "🔁 Duplicate Webhook"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 15000
+        },
+        "url": "={{ $('⚙️ Config').first().json.alert_channel_url }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"content\": {{ JSON.stringify('💰 PAYMENT RECEIVED — ' + $json.business_name + ' (' + ($json.niche || '') + ', ' + ($json.location || '') + ')\\nAmount: ' + $json.amount_display + '\\nContact: ' + ($json.email || '') + ' ' + ($json.phone || '') + '\\nPrototype: ' + ($json.prototype_url || 'n/a') + '\\nBuilding the full site now…') }},\n  \"text\": {{ JSON.stringify('💰 PAYMENT RECEIVED — ' + $json.business_name + ' | ' + $json.amount_display + ' | ' + ($json.email || $json.phone || '')) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1300,
+        -340
+      ],
+      "id": "751b36f7-61c4-4bb6-883f-395cea0c8126",
+      "name": "🔔 Alert Me (Slack/Discord)",
+      "onError": "continueRegularOutput",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $json;\nconst cfg = $('⚙️ Config').first().json;\nconst name = ctx.contact_name && ctx.contact_name !== 'Owner' ? ctx.contact_name : 'there';\n\nreturn [{\n  json: {\n    ...ctx,\n    subject: `Payment received — building ${ctx.business_name}`,\n    email_body:\n`Hi ${name},\n\nPayment received, thank you! 🎉\n\nI'm starting on the full site for ${ctx.business_name} right now. You'll have the live link within 48 hours, and I'll send it to you here.\n\nIf there's anything you want changed from the mockup — wording, colours, services, opening hours — just reply to this message and I'll fold it in before launch.\n\n${cfg.sender_name}`,\n    whatsapp_body:\n`Payment received, thank you! 🎉 I'm building the full site for ${ctx.business_name} now — you'll have the live link within 48 hours. Anything you want changed from the mockup, just tell me here.`,\n    stage_label: 'RECEIPT',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        -160
+      ],
+      "id": "fdfa290c-ab4d-49a0-b851-91d7aecc7811",
+      "name": "💌 Compose Receipt"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c7a7cb07-3b8a-4d9d-8a44-da845ba567f6",
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a7748444-3ee1-4443-97ee-2f597c158da0",
+                    "leftValue": "={{ $json.phone }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true,
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1540,
+        -160
+      ],
+      "id": "8f213527-2a79-4b2f-9eb0-83be46653a37",
+      "name": "🔀 Receipt Channel"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "fromEmail": "={{ $('⚙️ Config').first().json.sender_email }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.email_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1780,
+        -240
+      ],
+      "id": "3fda6b5d-6f97-42e3-9407-45339327f5a2",
+      "name": "📧 Send Receipt",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 60000
+        },
+        "url": "={{ $('⚙️ Config').first().json.evolution_url }}/message/sendText/{{ $('⚙️ Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": {{ JSON.stringify($json.phone) }},\n  \"delay\": 1200,\n  \"linkPreview\": true,\n  \"text\": {{ JSON.stringify($json.whatsapp_body) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        -80
+      ],
+      "id": "b99702bf-079e-45d2-be97-e8ee8d478905",
+      "name": "💬 Send Receipt (WA)",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2020,
+        -160
+      ],
+      "id": "b21bb5cb-80f1-416f-94ee-43f053caca65",
+      "name": "🔗 Merge Receipt"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// BUILD_MODE=auto   → Hermes builds the full site and deploys to Vercel\n// BUILD_MODE=manual → you build it; the workflow just notifies you\nconst ctx  = $('💌 Compose Receipt').first().json;\nconst mode = ($env.BUILD_MODE || 'auto').toLowerCase() === 'manual' ? 'manual' : 'auto';\nreturn [{ json: { ...ctx, build_mode: mode } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2260,
+        -160
+      ],
+      "id": "332f469b-b715-4af2-a91c-e9498fea1ff5",
+      "name": "🛠 Choose Build Mode"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "303860ec-ef56-4bb8-a301-ee979d889fba",
+              "leftValue": "={{ $json.build_mode }}",
+              "rightValue": "auto",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2500,
+        -160
+      ],
+      "id": "62c91806-1d78-430c-ab20-492048f5452b",
+      "name": "❓ Auto Build?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2740,
+        40
+      ],
+      "id": "613a6939-9c96-4f78-9989-20a5d70369e8",
+      "name": "🙋 Manual Build Queue"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "duplicateItem": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a7fae4ba-918b-42fd-b5df-d60a8bcc8140",
+              "name": "system_prompt",
+              "value": "=You are a senior front-end developer shipping a paid client website. You output one complete, production-ready HTML document and nothing else — no markdown fences, no commentary.",
+              "type": "string"
+            },
+            {
+              "id": "23afaa4c-63a6-4482-9cf5-a63d3356c4ab",
+              "name": "prompt",
+              "value": "=Build the FULL production website for a paying client. This replaces the free mockup, so it must be noticeably richer than a one-screen landing page.\n\nBusiness: {{ $json.business_name }}\nIndustry: {{ $json.niche }}\nCity: {{ $json.location }}\nPhone: {{ $json.phone }}\nEmail: {{ $json.email }}\nApproved mockup (match its spirit, then go further): {{ $json.prototype_url }}\n\nRequirements:\n- Single self-contained index.html, Tailwind via <script src=\"https://cdn.tailwindcss.com\"></script>.\n- Sections in order: sticky nav with smooth-scroll anchors, hero with tel: call button, about, 6 detailed service cards with realistic pricing ranges for a {{ $json.niche }} in {{ $json.location }}, process/how-it-works in 3 steps, why-choose-us, 3 testimonials, FAQ with 5 questions using <details>/<summary>, service-area, contact section with click-to-call and click-to-WhatsApp (https://wa.me/{{ $json.phone }}), footer with opening hours.\n- Full SEO head: <title>, meta description, canonical, Open Graph tags, and a JSON-LD LocalBusiness schema block with the real name, phone and city.\n- Accessible: semantic landmarks, alt text, visible focus states, colour contrast AA.\n- Mobile-first responsive, one tasteful accent colour for the industry, inline SVG icons only.\n- Real specific copy throughout. No lorem ipsum, no [placeholders], no broken image links.\n\nOutput the raw HTML document starting with <!DOCTYPE html>.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2740,
+        -280
+      ],
+      "id": "3a3f143e-3c5f-4edc-9500-20469c08e9d3",
+      "name": "🏗 Build Full Site Prompt"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 180000,
+          "response": {
+            "response": {
+              "neverError": false
+            }
+          }
+        },
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "={{ $('⚙️ Config').first().json.public_site_url }}"
+            },
+            {
+              "name": "X-Title",
+              "value": "Omnichannel AI Sales Machine"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": {{ JSON.stringify($('⚙️ Config').first().json.model_coder) }},\n  \"temperature\": 0.6,\n  \"max_tokens\": 16000,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt || 'You are a helpful assistant.') }} },\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.prompt) }} }\n  ]\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2980,
+        -280
+      ],
+      "id": "35d16513-f5a8-48d6-9f15-c365a8248f98",
+      "name": "🧠 Hermes · Build Full Site",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🛠 Choose Build Mode').first().json;\n\nlet html = ($json?.choices?.[0]?.message?.content || '').trim();\nhtml = html.replace(/^\\`\\`\\`(?:html)?\\s*/i, '').replace(/\\`\\`\\`\\s*$/, '').trim();\n\nconst start = html.search(/<!DOCTYPE|<html/i);\nif (start > 0) html = html.slice(start);\nconst end = html.toLowerCase().lastIndexOf('</html>');\nif (end !== -1) html = html.slice(0, end + 7);\n\nconst problems = [];\nif (html.length < 3000) problems.push('too short (' + html.length + ' chars)');\nif (!/<\\/html>/i.test(html)) problems.push('no closing </html> — model truncated');\nif (/lorem ipsum|\\[business name\\]|\\[phone\\]/i.test(html)) problems.push('placeholder text left in');\n\nif (problems.length) {\n  // A paying customer is waiting — fail loudly so the error workflow pings you.\n  throw new Error(\n    `Full-site build rejected for \"${ctx.business_name}\": ${problems.join('; ')}. ` +\n    'PAYMENT IS ALREADY TAKEN — build this one manually.'\n  );\n}\n\nconst slug = (ctx.business_name || 'client')\n  .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'client';\n\nreturn [{ json: { ...ctx, html, project_name: `${slug}-${String(ctx.lead_id).slice(0, 8)}` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3220,
+        -280
+      ],
+      "id": "53ee2947-a0ae-4ee2-93c8-17cf04d3b5c0",
+      "name": "🧽 Validate Full Site"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 180000
+        },
+        "url": "https://api.vercel.com/v13/deployments",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "forceNew",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": {{ JSON.stringify($json.project_name) }},\n  \"target\": \"production\",\n  \"public\": true,\n  \"files\": [\n    { \"file\": \"index.html\", \"data\": {{ JSON.stringify($json.html) }}, \"encoding\": \"utf-8\" }\n  ],\n  \"projectSettings\": { \"framework\": null, \"buildCommand\": null, \"outputDirectory\": null, \"installCommand\": null }\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3460,
+        -280
+      ],
+      "id": "bddfb18e-f0df-434f-be8f-3cecf6fa82fc",
+      "name": "▲ Deploy Final Site",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 8000
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🧽 Validate Full Site').first().json;\nconst d = $json || {};\nconst host = d.alias?.[0] || d.url || d.deployment?.url;\nif (!host) throw new Error('Vercel returned no URL: ' + JSON.stringify(d).slice(0, 400));\nreturn [{ json: { ...ctx, final_url: host.startsWith('http') ? host : `https://${host}` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3700,
+        -280
+      ],
+      "id": "d59d09b5-f167-4d85-807e-a2fd570f1869",
+      "name": "🔗 Final URL"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_mark_delivered",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\": {{ JSON.stringify($json.lead_id) }},\n  \"p_url\":     {{ JSON.stringify($json.final_url) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3940,
+        -280
+      ],
+      "id": "1298cf8a-6e5c-4b08-9c67-363ab45d7753",
+      "name": "🏁 Mark Delivered"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const ctx = $('🔗 Final URL').first().json;\nconst cfg = $('⚙️ Config').first().json;\nconst name = ctx.contact_name && ctx.contact_name !== 'Owner' ? ctx.contact_name : 'there';\n\nreturn [{\n  json: {\n    ...ctx,\n    subject: `${ctx.business_name} is live 🎉`,\n    email_body:\n`Hi ${name},\n\nYour website is live:\n\n${ctx.final_url}\n\nEverything works on mobile — the call button dials your number and the WhatsApp button opens a chat with you directly.\n\nTwo things worth doing next:\n1. Send me your preferred domain (e.g. ${(ctx.business_name || 'yourbusiness').toLowerCase().replace(/[^a-z0-9]+/g, '')}.com) and I'll point it at the site.\n2. Add the link to your Google Business Profile — that's where most of your customers will find it.\n\nAny tweaks at all, just reply here.\n\n${cfg.sender_name}`,\n    whatsapp_body:\n`${ctx.business_name} is live 🎉\n\n${ctx.final_url}\n\nOpen it on your phone — the call and WhatsApp buttons go straight to you. Send me the domain you want and I'll connect it. Any tweaks, just message me here.`,\n    stage_label: 'DELIVERY',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4180,
+        -280
+      ],
+      "id": "fb481fc7-9727-4a3e-b0b5-8b854ebc1253",
+      "name": "💌 Compose Delivery"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "c7a7cb07-3b8a-4d9d-8a44-da845ba567f6",
+                    "leftValue": "={{ $json.email }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "email"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "a7748444-3ee1-4443-97ee-2f597c158da0",
+                    "leftValue": "={{ $json.phone }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "whatsapp"
+            }
+          ]
+        },
+        "options": {
+          "looseTypeValidation": true,
+          "allMatchingOutputs": true
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        4420,
+        -280
+      ],
+      "id": "bd2d3979-6abf-4443-85de-34109fe7f7c7",
+      "name": "🔀 Delivery Channel"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "fromEmail": "={{ $('⚙️ Config').first().json.sender_email }}",
+        "toEmail": "={{ $json.email }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.email_body }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        4660,
+        -360
+      ],
+      "id": "0d9fc7e4-ee0f-4be1-b42b-ed37c3a547f5",
+      "name": "📧 Deliver By Email",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 60000
+        },
+        "url": "={{ $('⚙️ Config').first().json.evolution_url }}/message/sendText/{{ $('⚙️ Config').first().json.evolution_instance }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"number\": {{ JSON.stringify($json.phone) }},\n  \"delay\": 1200,\n  \"linkPreview\": true,\n  \"text\": {{ JSON.stringify($json.whatsapp_body) }}\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4660,
+        -200
+      ],
+      "id": "8dd83d86-6374-4eae-83c6-5a2e34021fe1",
+      "name": "💬 Deliver By WhatsApp",
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "mode": "append",
+        "numberInputs": 2,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4900,
+        -280
+      ],
+      "id": "1b690d18-3168-4861-bd5b-d80a39ecaed5",
+      "name": "🔗 Merge Delivery"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "options": {
+          "timeout": 30000
+        },
+        "url": "={{ $json.supabase_url || $('⚙️ Config').first().json.supabase_url }}/rest/v1/rpc/sales_log_message",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_lead_id\":    {{ JSON.stringify($('💌 Compose Delivery').first().json.lead_id) }},\n  \"p_contact_id\": null,\n  \"p_direction\":  \"outbound\",\n  \"p_channel\":    \"email\",\n  \"p_body\":       {{ JSON.stringify($('💌 Compose Delivery').first().json.email_body) }},\n  \"p_subject\":    {{ JSON.stringify($('💌 Compose Delivery').first().json.subject) }},\n  \"p_intent\":     \"DELIVERY\"\n}"
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5140,
+        -280
+      ],
+      "id": "fae7a6d6-751f-4e00-a875-b9efd58188be",
+      "name": "📝 Log Delivery",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## PHASE 4 · Money in, site out\n**Razorpay setup:** Dashboard → Settings → Webhooks → add\n`https://YOUR-N8N/webhook/razorpay-webhook`, events\n`payment_link.paid` + `payment.captured`, and put the secret in\n`RAZORPAY_WEBHOOK_SECRET`.\n\n⚠️ The Webhook node has **Raw Body ON** — required for HMAC to match.\nDon't switch it off.",
+        "width": 620,
+        "height": 320,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        -420
+      ],
+      "id": "84af7433-8ee9-4a0c-9ce4-57b14d051c1e",
+      "name": "Note 1"
+    },
+    {
+      "parameters": {
+        "content": "### Idempotent by design\nRazorpay retries webhooks for up to 24h. `sales_record_payment_paid`\nreturns `already_paid` so a replay stops at **🔁 Duplicate Webhook** —\nthe customer never gets two receipts.",
+        "width": 420,
+        "height": 200,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1060,
+        200
+      ],
+      "id": "ce86574f-84cf-4eec-a790-41b5bfce5225",
+      "name": "Note 2"
+    },
+    {
+      "parameters": {
+        "content": "### BUILD_MODE\n`auto` (default) — Hermes builds and deploys the full site.\n`manual` — you get the alert and build it yourself; the receipt still\ngoes out automatically.\n\nIf the auto build fails validation the node **throws on purpose**: money\nis already taken, so you want a loud error, not a silent bad deploy.\nWire an Error Workflow to catch it.",
+        "width": 460,
+        "height": 300,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2700,
+        200
+      ],
+      "id": "5414d175-a86d-48ed-aae6-2c70d30ac5af",
+      "name": "Note 3"
+    }
+  ],
+  "connections": {
+    "🌐 Webhook · razorpay": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Config": {
+      "main": [
+        [
+          {
+            "node": "🔐 Verify Razorpay Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔐 Verify Razorpay Signature": {
+      "main": [
+        [
+          {
+            "node": "❓ Valid & Paid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ Valid & Paid?": {
+      "main": [
+        [
+          {
+            "node": "↩️ 200 OK (accepted)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "↩️ 200 OK (ignored)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "↩️ 200 OK (accepted)": {
+      "main": [
+        [
+          {
+            "node": "💰 Mark Payment Paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💰 Mark Payment Paid": {
+      "main": [
+        [
+          {
+            "node": "🧾 Payment Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧾 Payment Context": {
+      "main": [
+        [
+          {
+            "node": "❓ First Time Paid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ First Time Paid?": {
+      "main": [
+        [
+          {
+            "node": "💌 Compose Receipt",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔔 Alert Me (Slack/Discord)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🔁 Duplicate Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💌 Compose Receipt": {
+      "main": [
+        [
+          {
+            "node": "🔀 Receipt Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Receipt Channel": {
+      "main": [
+        [
+          {
+            "node": "📧 Send Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "💬 Send Receipt (WA)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Send Receipt": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Send Receipt (WA)": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Receipt",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Receipt": {
+      "main": [
+        [
+          {
+            "node": "🛠 Choose Build Mode",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🛠 Choose Build Mode": {
+      "main": [
+        [
+          {
+            "node": "❓ Auto Build?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "❓ Auto Build?": {
+      "main": [
+        [
+          {
+            "node": "🏗 Build Full Site Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "🙋 Manual Build Queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🏗 Build Full Site Prompt": {
+      "main": [
+        [
+          {
+            "node": "🧠 Hermes · Build Full Site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 Hermes · Build Full Site": {
+      "main": [
+        [
+          {
+            "node": "🧽 Validate Full Site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧽 Validate Full Site": {
+      "main": [
+        [
+          {
+            "node": "▲ Deploy Final Site",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "▲ Deploy Final Site": {
+      "main": [
+        [
+          {
+            "node": "🔗 Final URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔗 Final URL": {
+      "main": [
+        [
+          {
+            "node": "🏁 Mark Delivered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🏁 Mark Delivered": {
+      "main": [
+        [
+          {
+            "node": "💌 Compose Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💌 Compose Delivery": {
+      "main": [
+        [
+          {
+            "node": "🔀 Delivery Channel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔀 Delivery Channel": {
+      "main": [
+        [
+          {
+            "node": "📧 Deliver By Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "💬 Deliver By WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📧 Deliver By Email": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💬 Deliver By WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "🔗 Merge Delivery",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "🔗 Merge Delivery": {
+      "main": [
+        [
+          {
+            "node": "📝 Log Delivery",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": [
+    "ai-sales-machine"
+  ],
+  "versionId": "93d7084c-7f18-47d3-82ba-5c416aa86cc8"
+}
