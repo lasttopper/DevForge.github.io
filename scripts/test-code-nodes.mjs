@@ -85,13 +85,17 @@ const CFG = {
   default_country_code: '91',
   dry_run: false,
   model_coder: 'deepseek/deepseek-chat-v3-0324:free',
+  searches_per_run: 2,
+  apify_max_places: 20,
+  build_mode: 'auto',
+  razorpay_webhook_secret: 'whsec_test_123',
 };
 
 /* ============================ WF1 ============================ */
 console.log('\n01 · Lead Discovery');
 
-test('Search Plan rotates and respects SEARCHES_PER_RUN', () => {
-  const out = runCodeNode(wfs.wf1, '🎯 Search Plan', { env: { SEARCHES_PER_RUN: '2' } });
+test('Search Plan rotates and respects searches_per_run', () => {
+  const out = runCodeNode(wfs.wf1, '🎯 Search Plan', { nodes: { '⚙️ Config': CFG } });
   assert.equal(out.length, 2);
   assert.ok(out[0].json.query.length > 0);
   assert.ok(out[0].json.niche && out[0].json.location);
@@ -193,6 +197,24 @@ test('Summarise Send detects which channels fired', () => {
   assert.equal(out[0].json.sent_email, true);
   assert.equal(out[0].json.sent_whatsapp, true);
   assert.equal(out[0].json.channel_used, 'email+whatsapp');
+});
+
+test('SAFETY: dry_run defaults to true on a fresh import', () => {
+  // A freshly imported workflow, with no env vars set at all, must not be
+  // able to message a real business.
+  for (const [name, wf] of Object.entries(wfs)) {
+    const cfg = wf.nodes.find((n) => n.name === '⚙️ Config');
+    if (!cfg) continue;
+    const dry = cfg.parameters.assignments.assignments.find((a) => a.name === 'dry_run');
+    assert.ok(dry, `${name} has no dry_run field`);
+    // evaluate the expression body with an empty $env
+    const expr = String(dry.value).replace(/^=\{\{|\}\}$/g, '').trim();
+    const val = new Function('$env', `return (${expr});`)({});
+    assert.equal(val, true, `${name}: dry_run must default to true, got ${val}`);
+    // and it must still be switchable off
+    const off = new Function('$env', `return (${expr});`)({ DRY_RUN: 'false' });
+    assert.equal(off, false, `${name}: DRY_RUN=false must disable dry run`);
+  }
 });
 
 /* ============================ WF2 ============================ */
@@ -490,8 +512,8 @@ const sign = (body, secret) => crypto.createHmac('sha256', secret).update(body).
 
 test('Verify Signature accepts a correctly signed payload', () => {
   const out = runCodeNode(wfs.wf4, '🔐 Verify Razorpay Signature', {
-    env: { RAZORPAY_WEBHOOK_SECRET: SECRET },
     nodes: {
+      '⚙️ Config': CFG,
       '🌐 Webhook · razorpay': { headers: { 'x-razorpay-signature': sign(rzpBody, SECRET) }, body: rzpBody },
     },
   });
@@ -504,8 +526,8 @@ test('Verify Signature accepts a correctly signed payload', () => {
 
 test('Verify Signature accepts a base64 raw body', () => {
   const out = runCodeNode(wfs.wf4, '🔐 Verify Razorpay Signature', {
-    env: { RAZORPAY_WEBHOOK_SECRET: SECRET },
     nodes: {
+      '⚙️ Config': CFG,
       '🌐 Webhook · razorpay': {
         headers: { 'x-razorpay-signature': sign(rzpBody, SECRET) },
         body: Buffer.from(rzpBody, 'utf8').toString('base64'),
@@ -517,8 +539,7 @@ test('Verify Signature accepts a base64 raw body', () => {
 
 test('Verify Signature REJECTS a forged signature', () => {
   const out = runCodeNode(wfs.wf4, '🔐 Verify Razorpay Signature', {
-    env: { RAZORPAY_WEBHOOK_SECRET: SECRET },
-    nodes: { '🌐 Webhook · razorpay': { headers: { 'x-razorpay-signature': 'deadbeef' }, body: rzpBody } },
+    nodes: { '⚙️ Config': CFG, '🌐 Webhook · razorpay': { headers: { 'x-razorpay-signature': 'deadbeef' }, body: rzpBody } },
   });
   assert.equal(out[0].json.valid, false, 'forged signature must not pass');
   assert.equal(out[0].json.strict_valid, false);
@@ -527,8 +548,7 @@ test('Verify Signature REJECTS a forged signature', () => {
 test('Verify Signature REJECTS a tampered body', () => {
   const tampered = rzpBody.replace('150000', '100');
   const out = runCodeNode(wfs.wf4, '🔐 Verify Razorpay Signature', {
-    env: { RAZORPAY_WEBHOOK_SECRET: SECRET },
-    nodes: { '🌐 Webhook · razorpay': { headers: { 'x-razorpay-signature': sign(rzpBody, SECRET) }, body: tampered } },
+    nodes: { '⚙️ Config': CFG, '🌐 Webhook · razorpay': { headers: { 'x-razorpay-signature': sign(rzpBody, SECRET) }, body: tampered } },
   });
   assert.equal(out[0].json.valid, false);
 });
@@ -536,8 +556,7 @@ test('Verify Signature REJECTS a tampered body', () => {
 test('Verify Signature ignores non-payment events', () => {
   const other = JSON.stringify({ event: 'payment_link.expired', payload: { payment_link: { entity: { id: 'plink_9', notes: {} } } } });
   const out = runCodeNode(wfs.wf4, '🔐 Verify Razorpay Signature', {
-    env: { RAZORPAY_WEBHOOK_SECRET: SECRET },
-    nodes: { '🌐 Webhook · razorpay': { headers: { 'x-razorpay-signature': sign(other, SECRET) }, body: other } },
+    nodes: { '⚙️ Config': CFG, '🌐 Webhook · razorpay': { headers: { 'x-razorpay-signature': sign(other, SECRET) }, body: other } },
   });
   assert.equal(out[0].json.is_paid_event, false);
 });
@@ -566,10 +585,21 @@ test('Payment Context builds a display amount on first payment', () => {
   assert.equal(out[0].json.amount_display, '1,500');
 });
 
-test('Choose Build Mode honours BUILD_MODE', () => {
-  const ctx = { '💌 Compose Receipt': { lead_id: 'L1', business_name: 'Verma' } };
-  assert.equal(runCodeNode(wfs.wf4, '🛠 Choose Build Mode', { nodes: ctx, env: {} })[0].json.build_mode, 'auto');
-  assert.equal(runCodeNode(wfs.wf4, '🛠 Choose Build Mode', { nodes: ctx, env: { BUILD_MODE: 'manual' } })[0].json.build_mode, 'manual');
+test('Choose Build Mode honours build_mode from Config', () => {
+  const receipt = { '💌 Compose Receipt': { lead_id: 'L1', business_name: 'Verma' } };
+  assert.equal(runCodeNode(wfs.wf4, '🛠 Choose Build Mode',
+    { nodes: { ...receipt, '⚙️ Config': CFG } })[0].json.build_mode, 'auto');
+  assert.equal(runCodeNode(wfs.wf4, '🛠 Choose Build Mode',
+    { nodes: { ...receipt, '⚙️ Config': { ...CFG, build_mode: 'manual' } } })[0].json.build_mode, 'manual');
+});
+
+test('Verify Signature warns but does not crash when no secret is set', () => {
+  const out = runCodeNode(wfs.wf4, '🔐 Verify Razorpay Signature', {
+    nodes: { '⚙️ Config': { ...CFG, razorpay_webhook_secret: '' },
+             '🌐 Webhook · razorpay': { headers: {}, body: rzpBody } },
+  });
+  assert.equal(out[0].json.valid, true, 'unset secret falls through so test mode still works');
+  assert.equal(out[0].json.strict_valid, false);
 });
 
 test('Validate Full Site rejects truncation with a loud message', () => {

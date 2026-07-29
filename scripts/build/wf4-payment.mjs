@@ -36,7 +36,7 @@ export default function build() {
 const crypto = require('crypto');
 
 const hook   = \$('🌐 Webhook · razorpay').first().json;
-const secret = \$env.RAZORPAY_WEBHOOK_SECRET || '';
+const secret = \$('⚙️ Config').first().json.razorpay_webhook_secret || '';
 
 const headers   = hook.headers || {};
 const signature = headers['x-razorpay-signature'] || headers['X-Razorpay-Signature'] || '';
@@ -226,10 +226,11 @@ If there's anything you want changed from the mockup — wording, colours, servi
     wf,
     '🛠 Choose Build Mode',
     [2260, -160],
-    `// BUILD_MODE=auto   → Hermes builds the full site and deploys to Vercel
-// BUILD_MODE=manual → you build it; the workflow just notifies you
+    `// build_mode comes from the ⚙️ Config node (BUILD_MODE env var, default 'auto').
+//   auto   → Hermes builds the full site and deploys to Vercel
+//   manual → you build it; the workflow just notifies you
 const ctx  = \$('💌 Compose Receipt').first().json;
-const mode = (\$env.BUILD_MODE || 'auto').toLowerCase() === 'manual' ? 'manual' : 'auto';
+const mode = \$('⚙️ Config').first().json.build_mode === 'manual' ? 'manual' : 'auto';
 return [{ json: { ...ctx, build_mode: mode } }];`,
   );
 

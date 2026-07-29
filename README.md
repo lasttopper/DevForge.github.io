@@ -21,22 +21,25 @@ Apify ──▶ n8n ──▶ Hermes/OpenRouter ──▶ Supabase ──▶ Raz
 
 ## Quick start
 
-```bash
-git clone <this-repo> && cd Ai-web-sales-agent-
-npm install
-npm run check          # rebuild the JSON + validate structure
-```
+**→ [docs/IMPORT.md](docs/IMPORT.md) — how to use this in n8n, start to finish.**
 
-1. **Database** — run [`sql/01_schema.sql`](sql/01_schema.sql) then
+The 60-second version:
+
+1. **Import** the four files from `workflows/` into n8n
+   (*Workflows → ⋯ → Import from File*, or just paste the JSON onto a canvas).
+2. **Database** — run [`sql/01_schema.sql`](sql/01_schema.sql) then
    [`sql/02_functions.sql`](sql/02_functions.sql) in the Supabase SQL editor.
-2. **Env vars** — copy [`.env.example`](.env.example) into your n8n environment.
-3. **Credentials** — create the six credentials in [the setup guide](docs/SETUP.md#4-credentials).
-4. **Import** — drag the four files from `workflows/` into n8n.
-5. **Dry run** — set `DRY_RUN=true`, execute Workflow 1 manually, read the generated copy.
-6. **Go live** — set `DRY_RUN=false` and activate.
+3. **Config** — every workflow opens with a **⚙️ Config** node. Set your URLs, keys and
+   pricing there (or via env vars — see [`.env.example`](.env.example)). Nothing is
+   hardcoded anywhere else.
+4. **Credentials** — attach the eight credentials listed in
+   [docs/IMPORT.md §5](docs/IMPORT.md#step-5-attach-credentials).
+5. **Dry run** — `dry_run` ships as `true`: Workflow 1 will scrape, store and write copy
+   without sending anything. Read the output, tune the prompt, then flip it off.
 
-Full step-by-step instructions, including Evolution API on Railway and the
-Razorpay webhook: **[docs/SETUP.md](docs/SETUP.md)**.
+Infrastructure setup (Evolution API on Railway, Razorpay webhooks, Vercel tokens) is in
+**[docs/SETUP.md](docs/SETUP.md)**. Troubleshooting is in
+**[docs/RUNBOOK.md](docs/RUNBOOK.md)**.
 
 ---
 
@@ -111,7 +114,8 @@ filtered out before they reach the AI.
 ```
 workflows/     the four importable n8n JSON files  ← the deliverable
 sql/           Supabase schema + 12 RPC functions
-docs/SETUP.md  full setup guide (Railway, Evolution, Razorpay, Vercel)
+docs/IMPORT.md  how to use this in n8n (import → configure → test → live)
+docs/SETUP.md   infrastructure: Railway, Evolution, Razorpay, Vercel
 docs/RUNBOOK.md troubleshooting + scaling
 scripts/       the builder + test suite that generate and check workflows/
 ```
@@ -126,7 +130,7 @@ The JSON in `workflows/` is **generated**. Edit `scripts/build/*.mjs` and run
 ```bash
 npm run build       # regenerate workflows/ from scripts/build/
 npm run validate    # structure: connections, orphans, $() refs, JSON bodies
-npm test            # execute all 20 Code nodes against realistic fixtures (48 assertions)
+npm test            # execute all 20 Code nodes against realistic fixtures (49 assertions)
 npm run test:sql    # run the schema + all 12 RPCs on real Postgres (PGlite/WASM)
 npm run verify      # check node types + typeVersions vs real n8n-nodes-base
 npm run check       # build + validate + test + test:sql

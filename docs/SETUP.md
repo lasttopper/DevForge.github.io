@@ -1,4 +1,8 @@
-# Setup Guide
+# Setup Guide — infrastructure
+
+> **Just want to get the workflows running?** Start with
+> **[IMPORT.md](IMPORT.md)** — import, configure, test, go live.
+> This file covers the external services those steps depend on.
 
 Work through this in order. Budget about 90 minutes for the first run-through;
 the Evolution/WhatsApp step is the slowest.

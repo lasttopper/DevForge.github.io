@@ -38,7 +38,7 @@ const searches = [
 
 // Rotate so every run works a different slice instead of always hammering
 // the first search term (and re-scraping the same already-known places).
-const perRun = Number(\$env.SEARCHES_PER_RUN || 1);
+const perRun = Number(\$('⚙️ Config').first().json.searches_per_run || 1);
 const cursor = Math.floor(Date.now() / (1000 * 60 * 60 * 6)) % searches.length;
 const picked = [];
 for (let i = 0; i < Math.min(perRun, searches.length); i++) {
@@ -70,7 +70,7 @@ return picked.map((s) => ({ json: s }));`,
       specifyBody: 'json',
       jsonBody: `={
   "searchStringsArray": [{{ JSON.stringify($json.query) }}],
-  "maxCrawledPlacesPerSearch": {{ Number($env.APIFY_MAX_PLACES || 20) }},
+  "maxCrawledPlacesPerSearch": {{ $('⚙️ Config').first().json.apify_max_places }},
   "language": "en",
   "skipClosedPlaces": true,
   "scrapeContacts": false,

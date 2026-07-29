@@ -111,25 +111,49 @@
               "type": "string"
             },
             {
-              "id": "d7844ee4-b24d-4c39-a859-0ed712650d44",
+              "id": "6bca0c7a-efbf-4a03-ba71-4f1e640b6c41",
+              "name": "searches_per_run",
+              "value": "={{ Number($env.SEARCHES_PER_RUN || 1) }}",
+              "type": "number"
+            },
+            {
+              "id": "ee609881-998a-482a-8058-a9ad1a115e5c",
+              "name": "apify_max_places",
+              "value": "={{ Number($env.APIFY_MAX_PLACES || 20) }}",
+              "type": "number"
+            },
+            {
+              "id": "d7b57862-28ab-4dba-a9a2-6bfb8a7a4755",
+              "name": "build_mode",
+              "value": "={{ ($env.BUILD_MODE || 'auto').toLowerCase() === 'manual' ? 'manual' : 'auto' }}",
+              "type": "string"
+            },
+            {
+              "id": "a02e06c9-3ecd-46bd-acac-55b71bbe0887",
+              "name": "razorpay_webhook_secret",
+              "value": "={{ $env.RAZORPAY_WEBHOOK_SECRET || '' }}",
+              "type": "string"
+            },
+            {
+              "id": "84594efd-33e6-47d2-b978-7bbec42eea37",
               "name": "max_new_leads_per_run",
               "value": "={{ Number($env.MAX_NEW_LEADS_PER_RUN || 10) }}",
               "type": "number"
             },
             {
-              "id": "7fadcefc-48c8-4b80-8c27-8de24118e833",
+              "id": "a29ed9d8-4e77-41eb-a322-ce4d3dac9d38",
               "name": "whatsapp_daily_cap",
               "value": "={{ Number($env.WHATSAPP_DAILY_CAP || 40) }}",
               "type": "number"
             },
             {
-              "id": "32c43d99-1952-49b2-83f4-f430ad25a5a1",
+              "id": "19c89810-d545-4160-8a90-3a2171f50543",
               "name": "dry_run",
-              "value": "={{ ($env.DRY_RUN || 'false') === 'true' }}",
+              "value": "={{ ($env.DRY_RUN || 'true') !== 'false' }}",
               "type": "boolean"
             },
             {
-              "id": "b3ca3e5a-8cce-44b5-9848-00f690c6fdeb",
+              "id": "5f09541b-33c1-4434-aedc-4766d2274b5b",
               "name": "alert_channel_url",
               "value": "={{ $env.ALERT_WEBHOOK_URL || '' }}",
               "type": "string"
@@ -151,7 +175,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// Razorpay signs the RAW body with your webhook secret (HMAC-SHA256).\n// The webhook node must have \"Raw Body\" ON, otherwise the bytes change and\n// the signature will never match.\nconst crypto = require('crypto');\n\nconst hook   = $('🌐 Webhook · razorpay').first().json;\nconst secret = $env.RAZORPAY_WEBHOOK_SECRET || '';\n\nconst headers   = hook.headers || {};\nconst signature = headers['x-razorpay-signature'] || headers['X-Razorpay-Signature'] || '';\n\n// rawBody arrives base64-encoded in .body when rawBody=true\nlet raw = hook.body;\nif (raw && typeof raw === 'object' && raw.data) raw = raw.data;\nconst rawString = Buffer.isBuffer(raw)\n  ? raw.toString('utf8')\n  : (typeof raw === 'string'\n      ? (/^[A-Za-z0-9+/=]+$/.test(raw) && raw.length % 4 === 0\n          ? Buffer.from(raw, 'base64').toString('utf8')\n          : raw)\n      : JSON.stringify(raw ?? {}));\n\nlet payload;\ntry { payload = JSON.parse(rawString); }\ncatch { throw new Error('Webhook body is not JSON. Enable \"Raw Body\" on the Webhook node.'); }\n\nlet valid = false;\nif (secret && signature) {\n  const expected = crypto.createHmac('sha256', secret).update(rawString).digest('hex');\n  const a = Buffer.from(expected, 'utf8');\n  const b = Buffer.from(String(signature), 'utf8');\n  valid = a.length === b.length && crypto.timingSafeEqual(a, b);\n}\n\nif (!secret) {\n  // Loud, but don't hard-fail in test mode — you'd never see why nothing works.\n  console.warn('RAZORPAY_WEBHOOK_SECRET is not set — signature NOT verified.');\n}\n\nconst entity = payload?.payload?.payment_link?.entity\n            || payload?.payload?.payment?.entity\n            || {};\nconst paymentEntity = payload?.payload?.payment?.entity || {};\n\nreturn [{\n  json: {\n    valid: valid || !secret,\n    strict_valid: valid,\n    event: payload?.event || '',\n    link_id: entity.id || paymentEntity.invoice_id || '',\n    lead_id: entity.notes?.lead_id || paymentEntity.notes?.lead_id || '',\n    razorpay_payment_id: paymentEntity.id || entity.payment_id || null,\n    amount: Number(entity.amount ?? paymentEntity.amount ?? 0),\n    is_paid_event: ['payment_link.paid', 'payment.captured'].includes(payload?.event),\n  },\n}];"
+        "jsCode": "// Razorpay signs the RAW body with your webhook secret (HMAC-SHA256).\n// The webhook node must have \"Raw Body\" ON, otherwise the bytes change and\n// the signature will never match.\nconst crypto = require('crypto');\n\nconst hook   = $('🌐 Webhook · razorpay').first().json;\nconst secret = $('⚙️ Config').first().json.razorpay_webhook_secret || '';\n\nconst headers   = hook.headers || {};\nconst signature = headers['x-razorpay-signature'] || headers['X-Razorpay-Signature'] || '';\n\n// rawBody arrives base64-encoded in .body when rawBody=true\nlet raw = hook.body;\nif (raw && typeof raw === 'object' && raw.data) raw = raw.data;\nconst rawString = Buffer.isBuffer(raw)\n  ? raw.toString('utf8')\n  : (typeof raw === 'string'\n      ? (/^[A-Za-z0-9+/=]+$/.test(raw) && raw.length % 4 === 0\n          ? Buffer.from(raw, 'base64').toString('utf8')\n          : raw)\n      : JSON.stringify(raw ?? {}));\n\nlet payload;\ntry { payload = JSON.parse(rawString); }\ncatch { throw new Error('Webhook body is not JSON. Enable \"Raw Body\" on the Webhook node.'); }\n\nlet valid = false;\nif (secret && signature) {\n  const expected = crypto.createHmac('sha256', secret).update(rawString).digest('hex');\n  const a = Buffer.from(expected, 'utf8');\n  const b = Buffer.from(String(signature), 'utf8');\n  valid = a.length === b.length && crypto.timingSafeEqual(a, b);\n}\n\nif (!secret) {\n  // Loud, but don't hard-fail in test mode — you'd never see why nothing works.\n  console.warn('RAZORPAY_WEBHOOK_SECRET is not set — signature NOT verified.');\n}\n\nconst entity = payload?.payload?.payment_link?.entity\n            || payload?.payload?.payment?.entity\n            || {};\nconst paymentEntity = payload?.payload?.payment?.entity || {};\n\nreturn [{\n  json: {\n    valid: valid || !secret,\n    strict_valid: valid,\n    event: payload?.event || '',\n    link_id: entity.id || paymentEntity.invoice_id || '',\n    lead_id: entity.notes?.lead_id || paymentEntity.notes?.lead_id || '',\n    razorpay_payment_id: paymentEntity.id || entity.payment_id || null,\n    amount: Number(entity.amount ?? paymentEntity.amount ?? 0),\n    is_paid_event: ['payment_link.paid', 'payment.captured'].includes(payload?.event),\n  },\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -524,7 +548,7 @@
     {
       "parameters": {
         "mode": "runOnceForAllItems",
-        "jsCode": "// BUILD_MODE=auto   → Hermes builds the full site and deploys to Vercel\n// BUILD_MODE=manual → you build it; the workflow just notifies you\nconst ctx  = $('💌 Compose Receipt').first().json;\nconst mode = ($env.BUILD_MODE || 'auto').toLowerCase() === 'manual' ? 'manual' : 'auto';\nreturn [{ json: { ...ctx, build_mode: mode } }];"
+        "jsCode": "// build_mode comes from the ⚙️ Config node (BUILD_MODE env var, default 'auto').\n//   auto   → Hermes builds the full site and deploys to Vercel\n//   manual → you build it; the workflow just notifies you\nconst ctx  = $('💌 Compose Receipt').first().json;\nconst mode = $('⚙️ Config').first().json.build_mode === 'manual' ? 'manual' : 'auto';\nreturn [{ json: { ...ctx, build_mode: mode } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
