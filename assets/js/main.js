@@ -1,5 +1,5 @@
 /* ============================================================
-   VYROX — interactions
+   DevForge — interactions
    Vanilla JS, progressive enhancement. All motion respects
    prefers-reduced-motion and heavy effects are desktop-only.
    ============================================================ */
@@ -25,7 +25,8 @@
     // Brand name
     if (CONFIG.BRAND_NAME) {
       $all("[data-brand]").forEach(function (el) { el.textContent = CONFIG.BRAND_NAME; });
-      doc.title = doc.title.replace(/^VYROX/, CONFIG.BRAND_NAME);
+      var dash = doc.title.indexOf("—");
+      if (dash > -1) doc.title = CONFIG.BRAND_NAME + " " + doc.title.slice(dash);
     }
 
     // WhatsApp links

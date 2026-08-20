@@ -1,32 +1,41 @@
 /* ============================================================
    SITE CONFIGURATION
-   Edit these values to customize the site — nothing else needs
-   to change. All contact links, socials and form handling read
-   from this single object.
+   ------------------------------------------------------------
+   Defaults for local development live below. In production the
+   GitHub Pages workflow injects values from the repository's
+   Actions variables (Settings → Secrets and variables →
+   Actions) via assets/js/env.js — those always win over the
+   defaults, so you can reconfigure the live site without
+   touching the code.
    ============================================================ */
-window.SITE_CONFIG = {
-  // Brand
-  BRAND_NAME: "VYROX",
+(function () {
+  "use strict";
 
-  // Contact — WhatsApp number in international format, digits only
-  // TODO: replace with the real number before launch
-  WHATSAPP_NUMBER: "15551234567",
+  var env = window.SITE_ENV || {};
+  function pick(key, fallback) {
+    return env[key] != null && String(env[key]).trim() !== "" ? String(env[key]) : fallback;
+  }
 
-  // Contact — email used for mailto links and the audit fallback
-  // TODO: replace with the real inbox before launch
-  EMAIL: "hello@vyrox.studio",
+  window.SITE_CONFIG = {
+    // Brand
+    BRAND_NAME: pick("BRAND_NAME", "DevForge"),
 
-  // Social profiles
-  // TODO: replace placeholder URLs with real profiles
-  INSTAGRAM_URL: "https://instagram.com/",
-  LINKEDIN_URL: "https://linkedin.com/",
-  GITHUB_URL: "https://github.com/",
+    // Contact — WhatsApp number in international format, digits only
+    WHATSAPP_NUMBER: pick("WHATSAPP_NUMBER", "15551234567"),
 
-  // Lead form endpoint.
-  // Leave empty ("") to preview the form locally — submissions are
-  // simulated and the success state is shown without sending data.
-  // In production, point this at your backend API route or a form
-  // service such as Formspree / Basin / a serverless function:
-  //   FORM_ENDPOINT: "https://formspree.io/f/your-form-id"
-  FORM_ENDPOINT: "",
-};
+    // Contact — email used for mailto links
+    EMAIL: pick("EMAIL", "hello@devforge.dev"),
+
+    // Social profiles
+    INSTAGRAM_URL: pick("INSTAGRAM_URL", "https://instagram.com/devforge"),
+    LINKEDIN_URL: pick("LINKEDIN_URL", "https://linkedin.com/company/devforge"),
+    GITHUB_URL: pick("GITHUB_URL", "https://github.com/devforge"),
+
+    // Lead form endpoint.
+    // Leave empty ("") and submissions are simulated locally (nothing
+    // is sent). Point it at your backend API route or a form service
+    // (Formspree / Basin / serverless function) to receive real leads:
+    //   FORM_ENDPOINT: "https://formspree.io/f/your-form-id"
+    FORM_ENDPOINT: pick("FORM_ENDPOINT", ""),
+  };
+})();
