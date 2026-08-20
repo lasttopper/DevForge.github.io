@@ -1,0 +1,49 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inject configuration from GitHub Actions variables
+        env:
+          BRAND_NAME: ${{ vars.BRAND_NAME }}
+          WHATSAPP_NUMBER: ${{ vars.WHATSAPP_NUMBER }}
+          EMAIL: ${{ vars.EMAIL }}
+          INSTAGRAM_URL: ${{ vars.INSTAGRAM_URL }}
+          LINKEDIN_URL: ${{ vars.LINKEDIN_URL }}
+          GITHUB_URL: ${{ vars.GITHUB_URL }}
+          FORM_ENDPOINT: ${{ vars.FORM_ENDPOINT }}
+        run: node scripts/inject-config.mjs
+      - name: Stage site for Pages
+        run: |
+          mkdir -p _site
+          cp index.html privacy.html terms.html robots.txt _site/
+          cp -r assets _site/assets
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
